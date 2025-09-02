@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Cliente - Pulcro</title>
+    <link rel="stylesheet" href="cliente.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="nav">
+        <div class="logo">Pulcro</div>
+        <div class="user-info">
+          <span id="userEmail"></span>
+          <button class="btn-logout" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Welcome Section -->
+      <section class="welcome-section">
+        <h1>¡Bienvenido a Pulcro!</h1>
+        <p>Tu lavandería digital está lista para cuidar tu ropa</p>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="quick-actions">
+        <h2>Acciones Rápidas</h2>
+        <div class="action-buttons">
+          <button class="action-btn primary" onclick="openNewOrderModal()">
+            <i class="fas fa-plus"></i>
+            Nuevo Pedido
+          </button>
+          <button class="action-btn secondary" onclick="viewMyOrders()">
+            <i class="fas fa-list"></i>
+            Mis Pedidos
+          </button>
+          <button class="action-btn secondary" onclick="viewProfile()">
+            <i class="fas fa-user"></i>
+            Mi Perfil
+          </button>
+        </div>
+      </section>
+
+      <!-- Recent Orders -->
+      <section class="recent-orders">
+        <h2>Pedidos Recientes</h2>
+        <div id="ordersList" class="orders-grid">
+          <!-- Orders will be loaded here -->
+        </div>
+      </section>
+    </main>
+
+    <!-- New Order Modal -->
+    <div id="newOrderModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Nuevo Pedido</h2>
+          <button class="close-btn" onclick="closeNewOrderModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="orderForm" class="order-form">
+          <div class="form-group">
+            <label for="serviceType">Tipo de Servicio</label>
+            <select id="serviceType" required>
+              <option value="">Selecciona un servicio</option>
+              <option value="lavado">Lavado</option>
+              <option value="lavado-planchado">Lavado y Planchado</option>
+              <option value="zapatos">Lavado de Zapatos</option>
+              <option value="hogar">Ropa de Hogar</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="weight">Peso Estimado (kg)</label>
+            <input type="number" id="weight" min="0.5" step="0.5" required />
+          </div>
+
+          <div class="form-group">
+            <label for="pickupDate">Fecha de Recogida</label>
+            <input type="date" id="pickupDate" required />
+          </div>
+
+          <div class="form-group">
+            <label for="pickupTime">Hora de Recogida</label>
+            <input type="time" id="pickupTime" required />
+          </div>
+
+          <div class="form-group">
+            <label for="specialInstructions">Instrucciones Especiales</label>
+            <textarea
+              id="specialInstructions"
+              rows="3"
+              placeholder="Alguna instrucción especial para tu ropa..."
+            ></textarea>
+          </div>
+
+          <div class="order-summary">
+            <h3>Resumen del Pedido</h3>
+            <div id="orderSummary">
+              <p>Selecciona un servicio para ver el precio</p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeNewOrderModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary">Crear Pedido</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- App Config -->
+    <script src="/assets/js/config/app-config.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="/assets/js/auth/firebase-config.js"></script>
+
+    <!-- Dashboard Script -->
+    <script src="cliente.js"></script>
+  </body>
+</html>

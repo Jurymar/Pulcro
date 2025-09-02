@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Usuarios pueden leer y escribir sus propios datos
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Clientes pueden leer y escribir sus propios datos
+    match /clientes/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Lavanderos pueden leer y escribir sus propios datos
+    match /lavanderos/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Permitir lectura pública de lavanderos para que los clientes puedan verlos
+    match /lavanderos/{userId} {
+      allow read: if true; // Lectura pública para mostrar lavanderías disponibles
+      allow write: if request.auth != null && request.auth.uid == userId; // Solo el propietario puede escribir
+    }
+    
+    // Regla por defecto - denegar todo lo demás
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

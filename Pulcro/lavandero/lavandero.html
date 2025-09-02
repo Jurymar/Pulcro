@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Lavandero - Pulcro</title>
+    <link rel="stylesheet" href="lavandero.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="nav">
+        <div class="logo">Pulcro</div>
+        <div class="user-info">
+          <span id="userEmail"></span>
+          <button class="btn-logout" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Welcome Section -->
+      <section class="welcome-section">
+        <h1>Panel de Lavandero</h1>
+        <p>Gestiona tus pedidos y servicios</p>
+      </section>
+
+      <!-- Stats Cards -->
+      <section class="stats-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon pending">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="pendingCount">0</h3>
+              <p>Pendientes</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon in-progress">
+              <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="inProgressCount">0</h3>
+              <p>En Progreso</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon completed">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="completedCount">0</h3>
+              <p>Completados</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon earnings">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-content">
+              <h3 id="totalEarnings">$0</h3>
+              <p>Ganancias Hoy</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders Tabs -->
+      <section class="orders-section">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="pending">
+            <i class="fas fa-clock"></i> Pendientes
+          </button>
+          <button class="tab-btn" data-tab="in-progress">
+            <i class="fas fa-spinner"></i> En Progreso
+          </button>
+          <button class="tab-btn" data-tab="completed">
+            <i class="fas fa-check-circle"></i> Completados
+          </button>
+          <button class="tab-btn" data-tab="all">
+            <i class="fas fa-list"></i> Todos
+          </button>
+        </div>
+
+        <!-- Orders Lists -->
+        <div class="orders-container">
+          <!-- Pending Orders -->
+          <div id="pending-orders" class="orders-list active">
+            <div class="orders-grid">
+              <!-- Orders will be loaded here -->
+            </div>
+          </div>
+
+          <!-- In Progress Orders -->
+          <div id="in-progress-orders" class="orders-list">
+            <div class="orders-grid">
+              <!-- Orders will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Completed Orders -->
+          <div id="completed-orders" class="orders-list">
+            <div class="orders-grid">
+              <!-- Orders will be loaded here -->
+            </div>
+          </div>
+
+          <!-- All Orders -->
+          <div id="all-orders" class="orders-list">
+            <div class="orders-grid">
+              <!-- Orders will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Detalles del Pedido</h2>
+          <button class="close-btn" onclick="closeOrderDetailsModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="orderDetailsContent" class="order-details-content">
+          <!-- Order details will be loaded here -->
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeOrderDetailsModal()">
+            Cerrar
+          </button>
+          <button
+            id="updateStatusBtn"
+            class="btn-primary"
+            onclick="updateOrderStatus()"
+          >
+            Actualizar Estado
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- App Config -->
+    <script src="/assets/js/config/app-config.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="/assets/js/auth/firebase-config.js"></script>
+
+    <!-- Dashboard Script -->
+    <script src="lavandero.js"></script>
+  </body>
+</html>
