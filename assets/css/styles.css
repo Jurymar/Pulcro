@@ -109,6 +109,38 @@ body {
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
+/* Estilos específicos para botones de formulario */
+.modal .btn-primary {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  border-radius: 10px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.modal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Mejoras para móvil */
+@media (max-width: 768px) {
+  .modal .btn-primary {
+    padding: 0.9rem 1.5rem;
+    font-size: 1.1rem;
+    min-height: 52px;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+  }
+}
+
 /* Menú hamburguesa */
 .nav-toggle {
   display: none;
@@ -429,6 +461,19 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Asegurar que el botón siempre sea visible en móvil */
+@media (max-width: 768px) {
+  .modal-content {
+    max-height: 98vh;
+    margin: 0.5% auto;
+    padding: 1.5rem;
+  }
+
+  .modal form {
+    padding-bottom: 2rem; /* Espacio extra para el botón */
+  }
 }
 
 @keyframes modalSlideIn {
@@ -780,6 +825,11 @@ body.modal-open {
   .form-group {
     margin-bottom: 1.2rem;
   }
+
+  /* Asegurar que el botón sea visible en móvil */
+  .modal form {
+    padding-bottom: 3rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -869,6 +919,11 @@ body.modal-open {
     left: 1rem;
     max-width: none;
   }
+
+  /* Asegurar espacio para el botón en pantallas pequeñas */
+  .modal form {
+    padding-bottom: 4rem;
+  }
 }
 
 @media (max-width: 400px) {
@@ -892,6 +947,23 @@ body.modal-open {
   .nav-menu {
     width: 90vw;
     padding: 5rem 1.5rem 2rem 1.5rem;
+  }
+
+  /* Asegurar que el botón sea visible en pantallas muy pequeñas */
+  .modal-content {
+    margin: 0.1rem;
+    max-height: 99.8vh;
+    padding: 0.8rem;
+  }
+
+  .modal form {
+    padding-bottom: 5rem;
+  }
+
+  .modal .btn-primary {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    min-height: 55px;
   }
 }
 
