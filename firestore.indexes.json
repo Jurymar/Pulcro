@@ -1,12 +1,12 @@
 {
   "indexes": [
     {
-      "collectionGroup": "lavanderos",
+      "collectionGroup": "clientes",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "services",
-          "arrayConfig": "CONTAINS"
+          "fieldPath": "email",
+          "order": "ASCENDING"
         },
         {
           "fieldPath": "createdAt",
@@ -15,12 +15,12 @@
       ]
     },
     {
-      "collectionGroup": "clientes",
+      "collectionGroup": "lavanderos",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "email",
-          "order": "ASCENDING"
+          "fieldPath": "services",
+          "arrayConfig": "CONTAINS"
         },
         {
           "fieldPath": "createdAt",

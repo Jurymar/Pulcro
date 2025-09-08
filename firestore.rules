@@ -1,30 +1,57 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Usuarios pueden leer y escribir sus propios datos
+    
+    // Usuarios
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Clientes pueden leer y escribir sus propios datos
+    // Clientes
     match /clientes/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Lavanderos pueden leer y escribir sus propios datos
+    // Lavanderos
     match /lavanderos/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null; 
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // Permitir lectura pública de lavanderos para que los clientes puedan verlos
-    match /lavanderos/{userId} {
-      allow read: if true; // Lectura pública para mostrar lavanderías disponibles
-      allow write: if request.auth != null && request.auth.uid == userId; // Solo el propietario puede escribir
+
+    // Pedidos
+    match /pedidos/{pedidoId} {
+      // Lectura:
+      allow read: if request.auth != null && (
+        // Cliente puede ver solo sus pedidos
+        resource.data.clienteId == request.auth.uid ||
+        // Lavandero puede ver todos los pedidos pendientes
+        resource.data.status == "pending" ||
+        // Lavandero puede ver los pedidos que ya aceptó
+        resource.data.lavanderoId == request.auth.uid
+      );
+
+      // Creación: cualquier autenticado puede crear (cliente)
+      allow create: if request.auth != null;
+
+      // Actualización:
+      allow update: if request.auth != null && (
+        // Cliente puede modificar/cancelar su propio pedido si está pendiente
+        (resource.data.clienteId == request.auth.uid && resource.data.status == "pending") ||
+        // Lavandero puede actualizar pedido que ya tomó
+        (resource.data.lavanderoId == request.auth.uid) ||
+        // Lavandero puede tomar un pedido pendiente (asignárselo y pasarlo a in-progress)
+        (resource.data.status == "pending" &&
+         request.resource.data.lavanderoId == request.auth.uid &&
+         request.resource.data.status == "in-progress")
+      );
+
+      // Eliminación: cliente puede borrar su propio pedido
+      allow delete: if request.auth != null && resource.data.clienteId == request.auth.uid;
     }
-    
-    // Regla por defecto - denegar todo lo demás
+
+    // Denegar lo no definido
     match /{document=**} {
       allow read, write: if false;
     }
   }
-} 
+}
