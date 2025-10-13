@@ -22,6 +22,16 @@ class PulcroApp {
           closeModal(modal.id);
         }
       });
+
+      // Close mobile menu when clicking outside
+      const navMenu = document.querySelector(".nav-menu");
+      const navToggle = document.querySelector(".nav-toggle");
+      if (navMenu && navMenu.classList.contains("open") && 
+          !navMenu.contains(event.target) && 
+          !navToggle.contains(event.target)) {
+        navMenu.classList.remove("open");
+        document.body.classList.remove("nav-open");
+      }
     };
 
     // Smooth scrolling for navigation links

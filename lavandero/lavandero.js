@@ -1,24 +1,28 @@
 // Dashboard Lavandero - Pulcro
 class LavanderoDashboard {
   constructor() {
-    this.auth = window.firebaseAuth;
-    this.db = window.firebaseDB;
+    this.firebaseService = window.firebaseService;
     this.currentUser = null;
     this.currentOrderId = null;
     this.init();
   }
 
   async init() {
+    console.log("🚀 Inicializando Dashboard de Lavandero...");
+    
     // Check authentication
-    this.auth.onAuthStateChanged(async (user) => {
+    this.firebaseService.onAuthStateChanged(async (user) => {
       if (user) {
+        console.log("✅ Usuario autenticado:", user.email);
         this.currentUser = user;
         await this.loadUserData();
         this.displayUserInfo();
-        await this.loadOrders();
+        this.subscribeToOrders();
         this.setupEventListeners();
-        this.updateStats();
+        this.showSection('pending-orders');
+        console.log("🎉 Dashboard de Lavandero inicializado correctamente");
       } else {
+        console.log("❌ Usuario no autenticado, redirigiendo...");
         // Redirect to main page if not authenticated
         window.location.href = "/index.html";
       }
@@ -27,13 +31,8 @@ class LavanderoDashboard {
 
   async loadUserData() {
     try {
-      const userDoc = await this.db
-        .collection("lavanderos")
-        .doc(this.currentUser.uid)
-        .get();
-      if (userDoc.exists) {
-        this.userData = userDoc.data();
-      } else {
+      this.userData = await this.firebaseService.getUserData(this.currentUser.uid, 'lavandero');
+      if (!this.userData) {
         // User is not a lavandero, redirect to main page
         console.log("❌ Usuario no es un lavandero, redirigiendo...");
         window.location.href = "/index.html";
@@ -53,14 +52,6 @@ class LavanderoDashboard {
   }
 
   setupEventListeners() {
-    // Tab switching
-    const tabButtons = document.querySelectorAll(".tab-btn");
-    tabButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        this.switchTab(button.dataset.tab);
-      });
-    });
-
     // Close modal when clicking outside
     window.onclick = (event) => {
       const modal = document.getElementById("orderDetailsModal");
@@ -68,80 +59,135 @@ class LavanderoDashboard {
         this.closeOrderDetailsModal();
       }
     };
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (event) => {
+      const navMenu = document.getElementById('navMenu');
+      const navToggle = document.querySelector('.nav-toggle');
+      
+      if (navMenu && navMenu.classList.contains('active') &&
+          !navMenu.contains(event.target) &&
+          !navToggle.contains(event.target)) {
+        navMenu.classList.remove('active');
+      }
+    });
   }
 
-  switchTab(tabName) {
-    // Update active tab button
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.classList.remove("active");
+  showSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(section => {
+      section.classList.remove('active');
     });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
-
-    // Update active orders list
-    document.querySelectorAll(".orders-list").forEach((list) => {
-      list.classList.remove("active");
+    
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
     });
-    document.getElementById(`${tabName}-orders`).classList.add("active");
-  }
-
-  async loadOrders() {
-    try {
-      // Load all orders for this lavandero
-      const ordersQuery = await this.db
-        .collection("pedidos")
-        .where("lavanderoId", "==", this.currentUser.uid)
-        .orderBy("createdAt", "desc")
-        .get();
-
-      const orders = [];
-      ordersQuery.forEach((doc) => {
-        orders.push({ id: doc.id, ...doc.data() });
-      });
-
-      this.displayOrders(orders);
-      this.updateStats(orders);
-    } catch (error) {
-      console.error("Error loading orders:", error);
+    
+    // Show selected section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+      targetSection.classList.add('active');
+    }
+    
+    // Add active class to corresponding nav item
+    const navItem = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
+    if (navItem) {
+      navItem.classList.add('active');
     }
   }
 
-  displayOrders(orders) {
-    // Group orders by status
-    const pendingOrders = orders.filter((order) => order.status === "pending");
-    const inProgressOrders = orders.filter(
-      (order) => order.status === "in-progress"
-    );
-    const completedOrders = orders.filter(
-      (order) => order.status === "completed"
-    );
+  subscribeToOrders() {
+    console.log("🔄 Suscribiéndose a pedidos para lavandero:", this.currentUser.uid);
+    
+    // Limpiar suscripciones anteriores si existen
+    if (this.unsubscribeAvailable) {
+      console.log("🧹 Limpiando suscripción anterior de pedidos disponibles");
+      this.unsubscribeAvailable();
+    }
+    if (this.unsubscribeMine) {
+      console.log("🧹 Limpiando suscripción anterior de pedidos del lavandero");
+      this.unsubscribeMine();
+    }
+    
+    // Suscripción a pedidos pendientes disponibles usando Firebase Service
+    console.log("📡 Iniciando suscripción a pedidos pendientes...");
+    this.unsubscribeAvailable = window.firebaseService.subscribeToPendingOrders((snapshot) => {
+      console.log("📊 Cambios en pedidos pendientes detectados, tamaño:", snapshot.size);
+      const pendingOrders = [];
+      
+      // Procesar cambios en el snapshot
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'removed') {
+          console.log("🗑️ Pedido eliminado:", change.doc.id);
+        } else if (change.type === 'added') {
+          console.log("➕ Pedido agregado:", change.doc.id);
+        } else if (change.type === 'modified') {
+          console.log("✏️ Pedido modificado:", change.doc.id);
+        }
+      });
+      
+      snapshot.forEach((doc) => {
+        const orderData = doc.data();
+        console.log("🔍 Revisando pedido:", doc.id, "lavanderoId:", orderData.lavanderoId);
+        // Verificar que no tenga lavandero asignado
+        if (!orderData.lavanderoId || orderData.lavanderoId === null) {
+          pendingOrders.push({ id: doc.id, ...orderData });
+          console.log("✅ Pedido disponible agregado:", doc.id);
+        } else {
+          console.log("❌ Pedido ya asignado:", doc.id, "a lavandero:", orderData.lavanderoId);
+        }
+      });
+      console.log("📋 Total pedidos pendientes disponibles:", pendingOrders.length);
+      this.displayOrdersInTab("pending", pendingOrders);
+    });
 
-    // Display orders in respective tabs
-    this.displayOrdersInTab("pending", pendingOrders);
-    this.displayOrdersInTab("in-progress", inProgressOrders);
-    this.displayOrdersInTab("completed", completedOrders);
-    this.displayOrdersInTab("all", orders);
+    // Suscripción a pedidos del lavandero usando Firebase Service
+    console.log("📡 Iniciando suscripción a pedidos del lavandero...");
+    this.unsubscribeMine = window.firebaseService.subscribeToLavanderoOrders(this.currentUser.uid, (snapshot) => {
+      console.log("📊 Cambios en pedidos del lavandero detectados, tamaño:", snapshot.size);
+      const orders = [];
+      snapshot.forEach((doc) => {
+        orders.push({ id: doc.id, ...doc.data() });
+      });
+      
+      console.log("📋 Total pedidos del lavandero:", orders.length);
+      
+      // Agrupar por estado
+      const inProgressOrders = orders.filter(order => order.status === "in-progress");
+      const completedOrders = orders.filter(order => order.status === "completed");
+      
+      console.log("📊 Pedidos por estado - En progreso:", inProgressOrders.length, "Completados:", completedOrders.length);
+      
+      // NO sobrescribir los pedidos pendientes aquí, solo mostrar los del lavandero
+      this.displayOrdersInTab("in-progress", inProgressOrders);
+      this.displayOrdersInTab("completed", completedOrders);
+    });
   }
 
   displayOrdersInTab(tabName, orders) {
-    const ordersGrid = document.querySelector(
-      `#${tabName}-orders .orders-grid`
-    );
+    console.log(`🖼️ Mostrando pedidos en tab: ${tabName}, cantidad: ${orders.length}`);
+    const container = document.getElementById(`${tabName}-orders-container`);
+    if (!container) {
+      console.error(`❌ Contenedor no encontrado: ${tabName}-orders-container`);
+      return;
+    }
 
     if (orders.length === 0) {
-      ordersGrid.innerHTML = `
-                <div class="order-card">
-                    <p style="text-align: center; color: #64748b;">
-                        No hay pedidos ${this.getStatusText(
-                          tabName
-                        ).toLowerCase()}.
-                    </p>
-                </div>
-            `;
+      console.log(`📭 No hay pedidos para mostrar en ${tabName}`);
+      container.innerHTML = `
+        <div class="order-card">
+          <p style="text-align: center; color: #64748b;">
+            No hay pedidos ${this.getStatusText(tabName).toLowerCase()}.
+          </p>
+        </div>
+      `;
     } else {
-      ordersGrid.innerHTML = "";
+      console.log(`✅ Renderizando ${orders.length} pedidos en ${tabName}`);
+      container.innerHTML = "";
       orders.forEach((order) => {
         const orderElement = this.createOrderCard(order.id, order);
-        ordersGrid.appendChild(orderElement);
+        container.appendChild(orderElement);
       });
     }
   }
@@ -150,86 +196,138 @@ class LavanderoDashboard {
     const orderCard = document.createElement("div");
     orderCard.className = "order-card";
 
-    const statusClass = this.getStatusClass(order.status);
-    const statusText = this.getStatusText(order.status);
+    const statusClass = this.getStatusClass(order.status || order.estado);
+    const statusText = this.getStatusText(order.status || order.estado);
+    const isPending = (order.status || order.estado) === "pending" && (!order.lavanderoId || order.lavanderoId === null);
+
+    // Formatear fecha de creación
+    const createdAt = order.createdAt ? 
+      new Date(order.createdAt.seconds * 1000).toLocaleString('es-CO', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'N/A';
 
     orderCard.innerHTML = `
-            <div class="order-header">
-                <span class="order-id">#${orderId.slice(-6)}</span>
-                <span class="order-status ${statusClass}">${statusText}</span>
+      <div class="order-header">
+        <span class="order-id">#${orderId.slice(-6)}</span>
+        <span class="order-status ${statusClass}">${statusText}</span>
+      </div>
+      
+      ${isPending ? `
+        <div class="order-alert">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>¡Nuevo pedido disponible para tomar!</span>
+        </div>
+      ` : ''}
+      
+      <div class="order-summary">
+        <div class="delivery-info">
+          <h4><i class="fas fa-map-marker-alt"></i> Información de Entrega</h4>
+          <div class="delivery-details">
+            <div class="delivery-item">
+              <i class="fas fa-map-pin"></i>
+              <span class="delivery-address">${order.direccion || 'No especificada'}</span>
             </div>
-            <div class="order-details">
-                <div class="order-detail">
-                    <label>Cliente</label>
-                    <span>${order.clienteName}</span>
-                </div>
-                <div class="order-detail">
-                    <label>Servicio</label>
-                    <span>${this.getServiceText(order.serviceType)}</span>
-                </div>
-                <div class="order-detail">
-                    <label>Peso</label>
-                    <span>${order.weight} kg</span>
-                </div>
-                <div class="order-detail">
-                    <label>Precio</label>
-                    <span>$${order.totalPrice}</span>
-                </div>
-                <div class="order-detail">
-                    <label>Fecha Recogida</label>
-                    <span>${new Date(
-                      order.pickupDate
-                    ).toLocaleDateString()}</span>
-                </div>
-                <div class="order-detail">
-                    <label>Hora</label>
-                    <span>${order.pickupTime}</span>
-                </div>
+            <div class="delivery-item">
+              <i class="fas fa-calendar"></i>
+              <span>${order.pickupDate || 'N/A'}</span>
             </div>
-            <div class="order-actions">
-                <button class="btn-action secondary" onclick="dashboard.viewOrderDetails('${orderId}')">
-                    <i class="fas fa-eye"></i> Ver Detalles
-                </button>
-                ${
-                  order.status === "pending"
-                    ? `
-                <button class="btn-action primary" onclick="dashboard.startOrder('${orderId}')">
-                    <i class="fas fa-play"></i> Iniciar
-                </button>
-                `
-                    : ""
-                }
-                ${
-                  order.status === "in-progress"
-                    ? `
-                <button class="btn-action primary" onclick="dashboard.completeOrder('${orderId}')">
-                    <i class="fas fa-check"></i> Completar
-                </button>
-                `
-                    : ""
-                }
+            <div class="delivery-item">
+              <i class="fas fa-clock"></i>
+              <span>${order.pickupTime || 'N/A'}</span>
             </div>
-        `;
+          </div>
+        </div>
+        
+        <div class="order-preview">
+          <div class="preview-item">
+            <i class="fas fa-user"></i>
+            <span>${order.clienteName || order.clienteEmail || 'Cliente'}</span>
+          </div>
+          <div class="preview-item">
+            <i class="fas fa-tshirt"></i>
+            <span>${this.getServiceText(order.serviceType)}</span>
+          </div>
+          <div class="preview-item">
+            <i class="fas fa-dollar-sign"></i>
+            <span class="price">$${order.totalPrice ? order.totalPrice.toLocaleString("es-CO") : 'N/A'} COP</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="order-actions">
+        ${this.getOrderActions(orderId, order)}
+      </div>
+    `;
 
     return orderCard;
   }
 
+  getOrderActions(orderId, order) {
+    const status = order.status || order.estado;
+    
+    if (status === "pending" && (!order.lavanderoId || order.lavanderoId === null)) {
+      return `
+        <div class="action-buttons">
+          <button class="btn-accept" onclick="startOrder('${orderId}')">
+            <i class="fas fa-hand-paper"></i> 
+            <span>Aceptar Pedido</span>
+            <small>Pasará automáticamente a "En Progreso"</small>
+          </button>
+          <button class="btn-secondary" onclick="viewOrderDetails('${orderId}')">
+            <i class="fas fa-eye"></i> Ver Detalles Completos
+          </button>
+        </div>
+      `;
+    } else if (status === "in-progress") {
+      return `
+        <div class="action-buttons">
+          <button class="btn-primary" onclick="completeOrder('${orderId}')">
+            <i class="fas fa-check"></i> Marcar como Completado
+          </button>
+          <button class="btn-secondary" onclick="viewOrderDetails('${orderId}')">
+            <i class="fas fa-eye"></i> Ver Detalles
+          </button>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="action-buttons">
+          <button class="btn-secondary" onclick="viewOrderDetails('${orderId}')">
+            <i class="fas fa-eye"></i> Ver Detalles
+          </button>
+        </div>
+      `;
+    }
+  }
+
   getStatusClass(status) {
     const statusClasses = {
-      pending: "pending",
+      "pending": "pending",
+      "pendiente": "pending",
       "in-progress": "in-progress",
-      completed: "completed",
-      cancelled: "cancelled",
+      "en progreso": "in-progress",
+      "completed": "completed",
+      "completado": "completed",
+      "cancelled": "cancelled",
+      "cancelado": "cancelled"
     };
     return statusClasses[status] || "pending";
   }
 
   getStatusText(status) {
     const statusTexts = {
-      pending: "Pendiente",
+      "pending": "Pendiente",
+      "pendiente": "Pendiente",
       "in-progress": "En Progreso",
-      completed: "Completado",
-      cancelled: "Cancelado",
+      "en progreso": "En Progreso",
+      "completed": "Completado",
+      "completado": "Completado",
+      "cancelled": "Cancelado",
+      "cancelado": "Cancelado"
     };
     return statusTexts[status] || "Pendiente";
   }
@@ -237,54 +335,56 @@ class LavanderoDashboard {
   getServiceText(serviceType) {
     const serviceTexts = {
       "lavado-planchado": "Lavado y Planchado",
-      zapatos: "Lavado de Zapatos",
-      hogar: "Ropa de Hogar",
+      "lavado": "Lavado",
+      "zapatos": "Lavado de Zapatos",
+      "hogar": "Ropa de Hogar",
     };
     return serviceTexts[serviceType] || serviceType;
   }
 
-  updateStats(orders = []) {
-    const pendingCount = orders.filter(
-      (order) => order.status === "pending"
-    ).length;
-    const inProgressCount = orders.filter(
-      (order) => order.status === "in-progress"
-    ).length;
-    const completedCount = orders.filter(
-      (order) => order.status === "completed"
-    ).length;
+  async startOrder(orderId) {
+    try {
+      this.showLoading(true);
+      
+      // Usar el servicio centralizado para tomar el pedido
+      await window.firebaseService.takeOrder(orderId, this.currentUser.uid);
+      
+      this.showNotification("¡Pedido tomado exitosamente!", "success");
+      
+    } catch (error) {
+      console.error("Error taking order:", error);
+      this.showNotification(error.message || "Error al tomar el pedido", "error");
+    } finally {
+      this.showLoading(false);
+    }
+  }
 
-    // Calculate today's earnings
-    const today = new Date().toISOString().split("T")[0];
-    const todayOrders = orders.filter(
-      (order) =>
-        order.status === "completed" &&
-        order.completedAt &&
-        new Date(order.completedAt.toDate()).toISOString().split("T")[0] ===
-          today
-    );
-    const todayEarnings = todayOrders.reduce(
-      (sum, order) => sum + order.totalPrice,
-      0
-    );
-
-    // Update stats display
-    document.getElementById("pendingCount").textContent = pendingCount;
-    document.getElementById("inProgressCount").textContent = inProgressCount;
-    document.getElementById("completedCount").textContent = completedCount;
-    document.getElementById(
-      "totalEarnings"
-    ).textContent = `$${todayEarnings.toFixed(2)}`;
+  async completeOrder(orderId) {
+    try {
+      this.showLoading(true);
+      
+      // Usar el servicio centralizado para completar el pedido
+      await window.firebaseService.completeOrder(orderId);
+      
+      this.showNotification("¡Pedido completado exitosamente!", "success");
+      
+    } catch (error) {
+      console.error("Error completing order:", error);
+      this.showNotification("Error al completar el pedido", "error");
+    } finally {
+      this.showLoading(false);
+    }
   }
 
   async viewOrderDetails(orderId) {
     try {
-      const orderDoc = await this.db.collection("pedidos").doc(orderId).get();
-      if (orderDoc.exists) {
-        const order = orderDoc.data();
+      const order = await this.firebaseService.getOrder(orderId);
+      if (order) {
         this.currentOrderId = orderId;
         this.displayOrderDetails(order);
         this.openOrderDetailsModal();
+      } else {
+        this.showNotification("Pedido no encontrado", "error");
       }
     } catch (error) {
       console.error("Error loading order details:", error);
@@ -293,183 +393,86 @@ class LavanderoDashboard {
   }
 
   displayOrderDetails(order) {
-    const contentDiv = document.getElementById("orderDetailsContent");
-
-    contentDiv.innerHTML = `
-            <div class="order-details-grid">
-                <div class="detail-group">
-                    <label>ID del Pedido</label>
-                    <span>#${this.currentOrderId.slice(-6)}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Cliente</label>
-                    <span>${order.clienteName}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Email del Cliente</label>
-                    <span>${order.clienteEmail}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Servicio</label>
-                    <span>${this.getServiceText(order.serviceType)}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Peso</label>
-                    <span>${order.weight} kg</span>
-                </div>
-                <div class="detail-group">
-                    <label>Precio Base</label>
-                    <span>$${order.basePrice}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Servicio Express</label>
-                    <span>${
-                      order.isExpress ? "Sí (+$" + order.expressFee + ")" : "No"
-                    }</span>
-                </div>
-                <div class="detail-group">
-                    <label>Precio Total</label>
-                    <span>$${order.totalPrice}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Fecha de Recogida</label>
-                    <span>${new Date(
-                      order.pickupDate
-                    ).toLocaleDateString()}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Hora de Recogida</label>
-                    <span>${order.pickupTime}</span>
-                </div>
-                <div class="detail-group">
-                    <label>Estado Actual</label>
-                    <span class="order-status ${this.getStatusClass(
-                      order.status
-                    )}">${this.getStatusText(order.status)}</span>
-                </div>
-            </div>
-            ${
-              order.specialInstructions
-                ? `
-            <div class="detail-group">
-                <label>Instrucciones Especiales</label>
-                <span>${order.specialInstructions}</span>
-            </div>
-            `
-                : ""
-            }
-            <div class="status-selector">
-                <h3>Actualizar Estado del Pedido</h3>
-                <div class="status-options">
-                    <div class="status-option ${
-                      order.status === "pending" ? "selected" : ""
-                    }" data-status="pending">
-                        Pendiente
-                    </div>
-                    <div class="status-option ${
-                      order.status === "in-progress" ? "selected" : ""
-                    }" data-status="in-progress">
-                        En Progreso
-                    </div>
-                    <div class="status-option ${
-                      order.status === "completed" ? "selected" : ""
-                    }" data-status="completed">
-                        Completado
-                    </div>
-                </div>
-            </div>
-        `;
-
-    // Add event listeners to status options
-    const statusOptions = contentDiv.querySelectorAll(".status-option");
-    statusOptions.forEach((option) => {
-      option.addEventListener("click", () => {
-        statusOptions.forEach((opt) => opt.classList.remove("selected"));
-        option.classList.add("selected");
-      });
-    });
+    const content = document.getElementById("orderDetailsContent");
+    content.innerHTML = `
+      <div class="order-details">
+        <div class="order-detail">
+          <label>ID del Pedido</label>
+          <span>#${this.currentOrderId.slice(-6)}</span>
+        </div>
+        <div class="order-detail">
+          <label>Cliente</label>
+          <span>${order.clienteName || order.clienteEmail || 'N/A'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Email del Cliente</label>
+          <span>${order.clienteEmail || 'N/A'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Descripción</label>
+          <span>${order.descripcion || 'Sin descripción'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Dirección</label>
+          <span>${order.direccion || 'No especificada'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Teléfono</label>
+          <span>${order.telefono || 'No especificado'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Servicio</label>
+          <span>${this.getServiceText(order.serviceType)}</span>
+        </div>
+        <div class="order-detail">
+          <label>Peso</label>
+          <span>${order.weight || 'N/A'} kg</span>
+        </div>
+        <div class="order-detail">
+          <label>Precio Total</label>
+          <span>$${order.totalPrice ? order.totalPrice.toLocaleString("es-CO") : 'N/A'} COP</span>
+        </div>
+        <div class="order-detail">
+          <label>Fecha de Recogida</label>
+          <span>${order.pickupDate || 'N/A'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Hora de Recogida</label>
+          <span>${order.pickupTime || 'N/A'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Instrucciones Especiales</label>
+          <span>${order.specialInstructions || 'Ninguna'}</span>
+        </div>
+        <div class="order-detail">
+          <label>Estado</label>
+          <span class="order-status ${this.getStatusClass(order.status || order.estado)}">${this.getStatusText(order.status || order.estado)}</span>
+        </div>
+        <div class="order-detail">
+          <label>Fecha de Creación</label>
+          <span>${order.createdAt ? new Date(order.createdAt.toDate()).toLocaleString() : 'N/A'}</span>
+        </div>
+      </div>
+    `;
   }
 
   openOrderDetailsModal() {
-    document.getElementById("orderDetailsModal").style.display = "block";
+    document.getElementById("orderDetailsModal").classList.add("active");
   }
 
   closeOrderDetailsModal() {
-    document.getElementById("orderDetailsModal").style.display = "none";
+    document.getElementById("orderDetailsModal").classList.remove("active");
     this.currentOrderId = null;
   }
 
-  async updateOrderStatus() {
-    if (!this.currentOrderId) return;
-
-    const selectedStatus = document.querySelector(".status-option.selected")
-      ?.dataset.status;
-    if (!selectedStatus) {
-      this.showNotification("Por favor selecciona un estado", "error");
-      return;
-    }
-
-    try {
-      const updateData = {
-        status: selectedStatus,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      };
-
-      if (selectedStatus === "completed") {
-        updateData.completedAt =
-          firebase.firestore.FieldValue.serverTimestamp();
+  showLoading(show) {
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    if (loadingOverlay) {
+      if (show) {
+        loadingOverlay.classList.add("active");
+      } else {
+        loadingOverlay.classList.remove("active");
       }
-
-      await this.db
-        .collection("pedidos")
-        .doc(this.currentOrderId)
-        .update(updateData);
-
-      this.showNotification(
-        "Estado del pedido actualizado exitosamente",
-        "success"
-      );
-      this.closeOrderDetailsModal();
-      await this.loadOrders();
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      this.showNotification(
-        "Error al actualizar el estado del pedido",
-        "error"
-      );
-    }
-  }
-
-  async startOrder(orderId) {
-    try {
-      await this.db.collection("pedidos").doc(orderId).update({
-        status: "in-progress",
-        lavanderoId: this.currentUser.uid,
-        startedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-
-      this.showNotification("Pedido iniciado exitosamente", "success");
-      await this.loadOrders();
-    } catch (error) {
-      console.error("Error starting order:", error);
-      this.showNotification("Error al iniciar el pedido", "error");
-    }
-  }
-
-  async completeOrder(orderId) {
-    try {
-      await this.db.collection("pedidos").doc(orderId).update({
-        status: "completed",
-        completedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-
-      this.showNotification("Pedido completado exitosamente", "success");
-      await this.loadOrders();
-    } catch (error) {
-      console.error("Error completing order:", error);
-      this.showNotification("Error al completar el pedido", "error");
     }
   }
 
@@ -477,29 +480,6 @@ class LavanderoDashboard {
     const notification = document.createElement("div");
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
-
-    notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            z-index: 10000;
-            max-width: 300px;
-            word-wrap: break-word;
-            animation: slideInRight 0.3s ease-out;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        `;
-
-    if (type === "success") {
-      notification.style.backgroundColor = "#10b981";
-    } else if (type === "error") {
-      notification.style.backgroundColor = "#ef4444";
-    } else {
-      notification.style.backgroundColor = "#3b82f6";
-    }
 
     document.body.appendChild(notification);
 
@@ -509,30 +489,135 @@ class LavanderoDashboard {
       }
     }, 5000);
   }
+
+  logout() {
+    // Limpiar listeners antes de cerrar sesión
+    if (this.unsubscribeAvailable) {
+      this.unsubscribeAvailable();
+    }
+    if (this.unsubscribeMine) {
+      this.unsubscribeMine();
+    }
+    
+    window.firebaseAuth
+      .signOut()
+      .then(() => {
+        window.location.href = "/index.html";
+      })
+      .catch((error) => {
+        console.error("Error signing out:", error);
+      });
+  }
 }
 
-// Global functions
+// Global functions for navigation
+function showSection(sectionId) {
+  // Hide all sections
+  document.querySelectorAll('.section').forEach(section => {
+    section.classList.remove('active');
+  });
+  
+  // Remove active class from all nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Show selected section
+  const targetSection = document.getElementById(sectionId);
+  if (targetSection) {
+    targetSection.classList.add('active');
+  }
+  
+  // Add active class to corresponding nav item
+  const navItem = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
+  if (navItem) {
+    navItem.classList.add('active');
+  }
+}
+
+
+// Global functions for navigation
+function toggleNavMenu() {
+  const navMenu = document.getElementById("navMenu");
+  navMenu.classList.toggle("active");
+}
+
+function closeNavMenu() {
+  const navMenu = document.getElementById("navMenu");
+  navMenu.classList.remove("active");
+}
+
+// Global functions for order actions
+function startOrder(orderId) {
+  if (window.lavanderoDashboard) {
+    window.lavanderoDashboard.startOrder(orderId);
+  }
+}
+
+function completeOrder(orderId) {
+  if (window.lavanderoDashboard) {
+    window.lavanderoDashboard.completeOrder(orderId);
+  }
+}
+
+function viewOrderDetails(orderId) {
+  if (window.lavanderoDashboard) {
+    window.lavanderoDashboard.viewOrderDetails(orderId);
+  }
+}
+
 function closeOrderDetailsModal() {
-  dashboard.closeOrderDetailsModal();
+  if (window.lavanderoDashboard) {
+    window.lavanderoDashboard.closeOrderDetailsModal();
+  }
 }
 
 function updateOrderStatus() {
-  dashboard.updateOrderStatus();
+  if (window.lavanderoDashboard && window.lavanderoDashboard.currentOrderId) {
+    const orderId = window.lavanderoDashboard.currentOrderId;
+    const status = window.lavanderoDashboard.getStatusText(
+      document.querySelector('.order-status').textContent
+    );
+    
+    if (status === "Pendiente") {
+      window.lavanderoDashboard.startOrder(orderId);
+    } else if (status === "En Progreso") {
+      window.lavanderoDashboard.completeOrder(orderId);
+    }
+  }
 }
 
-function logout() {
-  window.firebaseAuth
-    .signOut()
-    .then(() => {
-      window.location.href = "/index.html";
-    })
-    .catch((error) => {
-      console.error("Error signing out:", error);
+// Scroll to top functionality
+function setupScrollToTop() {
+  const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+  if (scrollTopBtn) {
+    // Show/hide button based on scroll position
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) {
+        scrollTopBtn.classList.add("show");
+      } else {
+        scrollTopBtn.classList.remove("show");
+      }
     });
+
+    // Scroll to top when clicked
+    scrollTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 }
 
 // Initialize dashboard
-let dashboard;
+let lavanderoDashboard;
 document.addEventListener("DOMContentLoaded", () => {
-  dashboard = new LavanderoDashboard();
+  lavanderoDashboard = new LavanderoDashboard();
+  window.lavanderoDashboard = lavanderoDashboard;
+  setupScrollToTop();
 });
+
+function logout() {
+  if (window.lavanderoDashboard) {
+    window.lavanderoDashboard.logout();
+  }
+}
