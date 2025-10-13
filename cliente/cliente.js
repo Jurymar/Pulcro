@@ -18,7 +18,7 @@ class ClienteDashboard {
         this.displayUserInfo();
         this.setupEventListeners();
         this.subscribeToMyOrders();
-        this.showSection('dashboard');
+        showSection('dashboard');
       } else {
         // Redirect to main page if not authenticated
         window.location.href = "/index.html";
@@ -43,15 +43,11 @@ class ClienteDashboard {
 
   displayUserInfo() {
     const userEmailElement = document.getElementById("userEmail");
-    const mobileUserEmailElement = document.getElementById("mobileUserEmail");
     const profileNameElement = document.getElementById("profileName");
     const profileEmailElement = document.getElementById("profileEmail");
     
     if (userEmailElement) {
       userEmailElement.textContent = this.currentUser.email;
-    }
-    if (mobileUserEmailElement) {
-      mobileUserEmailElement.textContent = this.currentUser.email;
     }
     if (profileNameElement) {
       profileNameElement.textContent = this.userData?.name || "Cliente";
@@ -125,7 +121,7 @@ class ClienteDashboard {
     
     // Usar el servicio centralizado para suscribirse a pedidos del cliente
     this.unsubscribeMyOrders = this.firebaseService.subscribeToClientOrders(this.currentUser.uid, (snapshot) => {
-      console.log("📊 Cambios en pedidos del cliente detectados");
+      console.log("📊 Cambios en pedidos del cliente detectados, tamaño:", snapshot.size);
       
       // Procesar cambios en el snapshot
       snapshot.docChanges().forEach((change) => {
@@ -140,13 +136,19 @@ class ClienteDashboard {
       
       const orders = [];
       snapshot.forEach((doc) => {
-        orders.push({ id: doc.id, ...doc.data() });
+        const orderData = { id: doc.id, ...doc.data() };
+        console.log("📋 Pedido encontrado:", orderData);
+        orders.push(orderData);
       });
+      
+      console.log("📊 Total pedidos cargados:", orders.length);
       
       // Guardar pedidos actuales para filtros
       this.currentOrders = orders;
       
       this.updateOrdersDisplay(orders);
+    }, (error) => {
+      console.error("❌ Error en suscripción a pedidos:", error);
     });
   }
 
@@ -160,13 +162,33 @@ class ClienteDashboard {
 
 
   updateActiveOrders(orders) {
+    console.log("🔄 Actualizando pedidos activos, total pedidos:", orders.length);
+    
+    // Update desktop container
     const container = document.getElementById("activeOrdersContainer");
-    if (!container) return;
+    if (!container) {
+      console.error("❌ No se encontró el contenedor activeOrdersContainer");
+    } else {
+      this.renderActiveOrders(container, orders);
+    }
 
-    const activeOrders = orders.filter(order => 
-      order.status === "pending" || order.status === "in-progress" ||
-      order.estado === "pendiente" || order.estado === "en progreso"
-    );
+    // Update mobile container
+    const mobileContainer = document.getElementById("mobileActiveOrdersContainer");
+    if (mobileContainer) {
+      this.renderActiveOrders(mobileContainer, orders);
+    }
+  }
+
+  renderActiveOrders(container, orders) {
+    const activeOrders = orders.filter(order => {
+      const status = order.status || order.estado;
+      const isActive = status === "pending" || status === "in-progress" || 
+                       status === "pendiente" || status === "en progreso";
+      console.log(`🔍 Pedido ${order.id}: estado="${status}", activo=${isActive}`);
+      return isActive;
+    });
+    
+    console.log("📊 Pedidos activos filtrados:", activeOrders.length);
     
     if (activeOrders.length === 0) {
       container.innerHTML = `
@@ -179,6 +201,7 @@ class ClienteDashboard {
     } else {
       container.innerHTML = "";
       activeOrders.forEach((order) => {
+        console.log("➕ Renderizando pedido activo:", order.id);
         const orderElement = this.createOrderCard(order.id, order);
         container.appendChild(orderElement);
       });
@@ -186,8 +209,12 @@ class ClienteDashboard {
   }
 
   updateOrderHistory(orders) {
+    console.log("🔄 Actualizando historial de pedidos, total pedidos:", orders.length);
     const container = document.getElementById("orderHistoryContainer");
-    if (!container) return;
+    if (!container) {
+      console.error("❌ No se encontró el contenedor orderHistoryContainer");
+      return;
+    }
 
     let filteredOrders = orders;
     
@@ -197,6 +224,8 @@ class ClienteDashboard {
         return status === this.currentFilter;
       });
     }
+    
+    console.log("📊 Pedidos filtrados para historial:", filteredOrders.length, "filtro:", this.currentFilter);
     
     if (filteredOrders.length === 0) {
       container.innerHTML = `
@@ -209,6 +238,7 @@ class ClienteDashboard {
     } else {
       container.innerHTML = "";
       filteredOrders.forEach((order) => {
+        console.log("➕ Renderizando pedido en historial:", order.id);
         const orderElement = this.createOrderCard(order.id, order);
         container.appendChild(orderElement);
       });
@@ -498,10 +528,6 @@ class ClienteDashboard {
     }, 5000);
   }
 
-  closeNewOrderModal() {
-    document.getElementById("newOrderModal").classList.remove("active");
-  }
-
 }
 
 // Global functions
@@ -544,16 +570,6 @@ function closeNewOrderModal() {
   document.getElementById("newOrderModal").classList.remove("active");
 }
 
-function toggleMobileMenu() {
-  const mobileMenu = document.getElementById("mobileMenu");
-  mobileMenu.classList.toggle("active");
-}
-
-function closeMobileMenu() {
-  const mobileMenu = document.getElementById("mobileMenu");
-  mobileMenu.classList.remove("active");
-}
-
 function logout() {
   // Limpiar listeners antes de cerrar sesión
   if (window.clienteDashboard && window.clienteDashboard.unsubscribeMyOrders) {
@@ -573,14 +589,9 @@ function logout() {
 // Close modal when clicking outside
 window.onclick = function (event) {
   const modal = document.getElementById("newOrderModal");
-  const mobileMenu = document.getElementById("mobileMenu");
   
   if (event.target === modal) {
     closeNewOrderModal();
-  }
-  
-  if (event.target === mobileMenu) {
-    closeMobileMenu();
   }
 };
 

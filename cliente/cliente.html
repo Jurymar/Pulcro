@@ -41,13 +41,13 @@
 
         <!-- Quick Actions -->
         <div class="quick-actions">
-          <h2>Acciones Rápidas</h2>
+          <h2 class="desktop-only">Acciones Rápidas</h2>
           <div class="action-buttons">
             <button class="action-btn primary" onclick="openNewOrderModal()">
               <i class="fas fa-plus"></i>
-              <span>Nuevo Pedido</span>
+              <span class="desktop-only">Nuevo Pedido</span>
             </button>
-            <button class="action-btn secondary" onclick="showSection('active-orders')">
+            <button class="action-btn secondary desktop-only" onclick="showSection('active-orders')">
               <i class="fas fa-clock"></i>
               <span>Ver Activos</span>
             </button>
@@ -59,6 +59,14 @@
               <i class="fas fa-user"></i>
               <span>Mi Perfil</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Active Orders in Dashboard (Mobile) -->
+        <div class="mobile-active-orders mobile-only">
+          <h3>Pedidos Activos</h3>
+          <div id="mobileActiveOrdersContainer" class="orders-container">
+            <!-- Active orders will be loaded here for mobile -->
           </div>
         </div>
       </section>

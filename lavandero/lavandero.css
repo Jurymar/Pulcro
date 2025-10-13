@@ -839,6 +839,17 @@ body {
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .order-card {
+    padding: 1rem;
+  }
+  
+  .order-summary {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .nav {
     padding: 1rem;
@@ -887,6 +898,9 @@ body {
   .nav-item {
     width: 100%;
     justify-content: flex-start;
+    min-height: 50px;
+    padding: 1rem;
+    font-size: 1rem;
     margin-bottom: 0.5rem;
   }
 
@@ -946,6 +960,22 @@ body {
   .modal-content {
     padding: 1.5rem;
     margin: 1rem;
+    width: calc(100% - 2rem);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 44px; /* Touch target size */
   }
   
   /* Estilos responsivos para nueva estructura de tarjetas */
@@ -986,19 +1016,48 @@ body {
     padding: 1rem;
   }
 
-  .sidebar {
-    padding: 1.5rem;
+  .top-nav {
+    padding: 0.8rem;
   }
 
-  .welcome-card {
-    padding: 2rem;
+  .nav-item {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    min-height: 45px;
   }
 
-  .welcome-card h3 {
+  .order-card {
+    padding: 0.8rem;
+  }
+
+  .order-card h3 {
+    font-size: 1rem;
+  }
+
+  .order-card p {
+    font-size: 0.8rem;
+  }
+
+  .btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.8rem;
+    min-height: 40px;
+  }
+
+  .modal-content {
+    margin: 0.5rem;
+    width: calc(100% - 1rem);
+    padding: 1rem;
+    max-height: 95vh;
+  }
+
+  .section-header h2 {
     font-size: 1.5rem;
   }
 
-  .action-btn {
-    padding: 1rem;
+  .delivery-item,
+  .preview-item {
+    padding: 0.3rem;
+    font-size: 0.8rem;
   }
 }
