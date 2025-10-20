@@ -67,3 +67,31 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.save
+*.tmp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+debug*.js
+test*.js

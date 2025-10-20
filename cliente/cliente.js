@@ -1,36 +1,95 @@
-// Dashboard Cliente - Pulcro
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * DASHBOARD DEL CLIENTE - Gestión de Pedidos y Perfil
+ * ═══════════════════════════════════════════════════════════════════
+ * 
+ * Este archivo maneja toda la lógica del panel de control del cliente:
+ * 
+ * FUNCIONALIDADES PRINCIPALES:
+ * ✅ Verificación de autenticación (solo clientes autenticados)
+ * ✅ Crear nuevos pedidos de lavandería
+ * ✅ Ver pedidos activos en tiempo real
+ * ✅ Historial completo de pedidos
+ * ✅ Filtrar pedidos (todos/pendientes/en progreso/completados)
+ * ✅ Eliminar pedidos
+ * ✅ Actualizar perfil (nombre, teléfono, dirección)
+ * ✅ Cerrar sesión
+ * 
+ * ACTUALIZACIONES EN TIEMPO REAL:
+ * - subscribeToMyOrders() crea un listener Firebase en tiempo real
+ * - Detecta automáticamente: pedidos nuevos, actualizados o eliminados
+ * - Actualiza la UI instantáneamente sin recargar la página
+ * 
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
 class ClienteDashboard {
+  // ──────────────────────────────────────────────────────────────────
+  // CONSTRUCTOR - Inicializa propiedades del dashboard
+  // ──────────────────────────────────────────────────────────────────
   constructor() {
-    this.firebaseService = window.firebaseService;
-    this.currentUser = null;
-    this.userData = null;
-    this.currentFilter = 'all';
-    this.currentOrders = [];
-    this.init();
+    this.firebaseService = window.firebaseService;  // Servicio Firebase global
+    this.currentUser = null;                        // Usuario autenticado (Firebase Auth)
+    this.userData = null;                           // Datos del cliente desde Firestore
+    this.currentFilter = 'all';                     // Filtro actual de pedidos
+    this.currentOrders = [];                        // Cache de pedidos para filtros
+    this.init();                                    // Inicializar dashboard
   }
 
+  // ──────────────────────────────────────────────────────────────────
+  // INICIALIZACIÓN - Configura el dashboard al cargar la página
+  // ──────────────────────────────────────────────────────────────────
+  /**
+   * Inicializa el dashboard del cliente
+   * 
+   * PROCESO:
+   * 1. Escucha cambios en autenticación (onAuthStateChanged)
+   * 2. Si hay un usuario logueado:
+   *    - Carga sus datos desde Firestore
+   *    - Muestra información del perfil
+   *    - Configura eventos de formularios y botones
+   *    - Inicia listener en tiempo real de pedidos
+   *    - Muestra la sección dashboard
+   * 3. Si NO hay usuario logueado:
+   *    - Redirige a la página principal (index.html)
+   */
   async init() {
-    // Check authentication
+    // Escuchar cambios en el estado de autenticación
     this.firebaseService.onAuthStateChanged(async (user) => {
       if (user) {
+        // Usuario autenticado encontrado
         this.currentUser = user;
-        await this.loadUserData();
-        this.displayUserInfo();
-        this.setupEventListeners();
-        this.subscribeToMyOrders();
-        showSection('dashboard');
+        await this.loadUserData();      // Cargar datos del cliente
+        this.displayUserInfo();         // Mostrar email y nombre
+        this.setupEventListeners();     // Configurar botones y formularios
+        this.subscribeToMyOrders();     // 🔥 Listener en tiempo real
+        showSection('dashboard');       // Mostrar sección principal
       } else {
-        // Redirect to main page if not authenticated
+        // No hay usuario autenticado, redirigir al inicio
         window.location.href = "/index.html";
       }
     });
   }
 
+  // ──────────────────────────────────────────────────────────────────
+  // CARGA DE DATOS DEL USUARIO
+  // ──────────────────────────────────────────────────────────────────
+  /**
+   * Carga los datos del cliente desde Firestore (colección 'clientes')
+   * 
+   * SEGURIDAD:
+   * - Verifica que el usuario sea realmente un cliente
+   * - Si no existe en la colección 'clientes', redirige al inicio
+   * - Esto previene que lavanderos accedan al dashboard de clientes
+   */
   async loadUserData() {
     try {
+      // Obtener datos del cliente desde Firestore
       this.userData = await this.firebaseService.getUserData(this.currentUser.uid, 'cliente');
+      
       if (!this.userData) {
-        // User is not a cliente, redirect to main page
+        // El usuario no existe en la colección 'clientes'
+        // Podría ser un lavandero intentando acceder al dashboard de cliente
         console.log("❌ Usuario no es un cliente, redirigiendo...");
         window.location.href = "/index.html";
         return;
@@ -41,6 +100,17 @@ class ClienteDashboard {
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────
+  // MOSTRAR INFORMACIÓN DEL USUARIO EN LA UI
+  // ──────────────────────────────────────────────────────────────────
+  /**
+   * Actualiza los elementos de la UI con información del usuario
+   * 
+   * ELEMENTOS QUE ACTUALIZA:
+   * - userEmail: Email en el header del dashboard
+   * - profileName: Nombre del cliente en la sección de perfil
+   * - profileEmail: Email en la sección de perfil
+   */
   displayUserInfo() {
     const userEmailElement = document.getElementById("userEmail");
     const profileNameElement = document.getElementById("profileName");
@@ -50,6 +120,7 @@ class ClienteDashboard {
       userEmailElement.textContent = this.currentUser.email;
     }
     if (profileNameElement) {
+      // Mostrar nombre guardado o "Cliente" por defecto
       profileNameElement.textContent = this.userData?.name || "Cliente";
     }
     if (profileEmailElement) {
@@ -111,42 +182,93 @@ class ClienteDashboard {
     }
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // ⚡ LISTENER EN TIEMPO REAL DE PEDIDOS - LA MAGIA SUCEDE AQUÍ
+  // ══════════════════════════════════════════════════════════════════
+  /**
+   * 🔥 FUNCIÓN CRÍTICA - Listener en Tiempo Real de Pedidos del Cliente
+   * 
+   * ¿QUÉ HACE?
+   * - Crea una conexión en tiempo real con Firestore (onSnapshot)
+   * - Escucha CONTINUAMENTE cambios en los pedidos del cliente
+   * - Actualiza la UI automáticamente SIN recargar la página
+   * 
+   * EVENTOS QUE DETECTA:
+   * ✅ 'added': Se crea un nuevo pedido → Aparece automáticamente en la lista
+   * ✅ 'modified': Se actualiza un pedido (ej: status cambia) → Se actualiza la UI
+   * ✅ 'removed': Se elimina un pedido → Desaparece automáticamente de la lista
+   * 
+   * ⚠️ IMPORTANTE - ELIMINACIÓN EN TIEMPO REAL:
+   * Cuando el cliente elimina un pedido:
+   * 1. deleteOrder() elimina el documento de Firestore
+   * 2. Este listener detecta automáticamente el evento 'removed'
+   * 3. Firebase envía un snapshot actualizado SIN el pedido eliminado
+   * 4. updateOrdersDisplay() renderiza la nueva lista (ya sin el pedido)
+   * 5. El lavandero TAMBIÉN ve la eliminación en tiempo real (su listener detecta 'removed')
+   * 
+   * FLUJO COMPLETO:
+   * Cliente elimina → Firestore elimina → subscribeToClientOrders detecta 'removed'
+   * → Actualiza UI del cliente → subscribeToLavanderoOrders detecta 'removed'
+   * → Actualiza UI del lavandero → TODO EN TIEMPO REAL 🔥
+   */
   subscribeToMyOrders() {
     console.log("🔄 Suscribiéndose a pedidos del cliente:", this.currentUser.uid);
     
-    // Limpiar suscripción anterior si existe
+    // ─────────────────────────────────────────────────────────────────
+    // LIMPIAR SUSCRIPCIÓN ANTERIOR (previene memory leaks)
+    // ─────────────────────────────────────────────────────────────────
     if (this.unsubscribeMyOrders) {
       this.unsubscribeMyOrders();
     }
     
-    // Usar el servicio centralizado para suscribirse a pedidos del cliente
-    this.unsubscribeMyOrders = this.firebaseService.subscribeToClientOrders(this.currentUser.uid, (snapshot) => {
-      console.log("📊 Cambios en pedidos del cliente detectados, tamaño:", snapshot.size);
-      
-      // Procesar cambios en el snapshot
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'removed') {
-          console.log("🗑️ Pedido eliminado:", change.doc.id);
-        } else if (change.type === 'added') {
-          console.log("➕ Pedido agregado:", change.doc.id);
-        } else if (change.type === 'modified') {
-          console.log("✏️ Pedido modificado:", change.doc.id);
-        }
-      });
-      
-      const orders = [];
-      snapshot.forEach((doc) => {
-        const orderData = { id: doc.id, ...doc.data() };
-        console.log("📋 Pedido encontrado:", orderData);
-        orders.push(orderData);
-      });
-      
-      console.log("📊 Total pedidos cargados:", orders.length);
-      
-      // Guardar pedidos actuales para filtros
-      this.currentOrders = orders;
-      
-      this.updateOrdersDisplay(orders);
+    // ─────────────────────────────────────────────────────────────────
+    // CREAR LISTENER EN TIEMPO REAL
+    // ─────────────────────────────────────────────────────────────────
+    // subscribeToClientOrders usa onSnapshot() internamente
+    // Esto mantiene una conexión abierta con Firestore
+    this.unsubscribeMyOrders = this.firebaseService.subscribeToClientOrders(
+      this.currentUser.uid, 
+      (snapshot) => {
+        console.log("📊 Cambios en pedidos del cliente detectados, tamaño:", snapshot.size);
+        
+        // ──────────────────────────────────────────────────────────────
+        // PROCESAR CAMBIOS INDIVIDUALES (para logging y debugging)
+        // ──────────────────────────────────────────────────────────────
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'removed') {
+            // ⚠️ CLAVE: Pedido eliminado por el cliente o el lavandero
+            console.log("🗑️ Pedido eliminado:", change.doc.id);
+          } else if (change.type === 'added') {
+            // Nuevo pedido creado por el cliente
+            console.log("➕ Pedido agregado:", change.doc.id);
+          } else if (change.type === 'modified') {
+            // Pedido actualizado (cambio de status, lavandero asignado, etc.)
+            console.log("✏️ Pedido modificado:", change.doc.id);
+          }
+        });
+        
+        // ──────────────────────────────────────────────────────────────
+        // CONSTRUIR LISTA ACTUALIZADA DE PEDIDOS
+        // ──────────────────────────────────────────────────────────────
+        // snapshot contiene TODOS los pedidos actuales (la "verdad absoluta")
+        // Firebase automáticamente EXCLUYE pedidos eliminados del snapshot
+        const orders = [];
+        snapshot.forEach((doc) => {
+          const orderData = { id: doc.id, ...doc.data() };
+          console.log("📋 Pedido encontrado:", orderData);
+          orders.push(orderData);
+        });
+        
+        console.log("📊 Total pedidos cargados:", orders.length);
+        
+        // ──────────────────────────────────────────────────────────────
+        // ACTUALIZAR UI CON LA LISTA NUEVA
+        // ──────────────────────────────────────────────────────────────
+        // Guardar en cache para filtros (todos/pendientes/completados)
+        this.currentOrders = orders;
+        
+        // Renderizar pedidos en la UI (automáticamente excluye eliminados)
+        this.updateOrdersDisplay(orders);
     }, (error) => {
       console.error("❌ Error en suscripción a pedidos:", error);
     });
@@ -417,7 +539,7 @@ class ClienteDashboard {
       await this.firebaseService.createOrder(orderData);
 
       this.showNotification("¡Pedido creado exitosamente!", "success");
-      this.closeNewOrderModal();
+      closeNewOrderModal();
       
       // Reset form
       e.target.reset();
@@ -444,17 +566,60 @@ class ClienteDashboard {
     return serviceTexts[serviceType] || serviceType;
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // ELIMINAR PEDIDO - Integración con Listener en Tiempo Real
+  // ══════════════════════════════════════════════════════════════════
+  /**
+   * 🗑️ Elimina un pedido de Firestore
+   * 
+   * FLUJO COMPLETO:
+   * 1. Usuario hace clic en "Eliminar" → Muestra confirmación
+   * 2. Si confirma → llama a firebaseService.deleteOrder(orderId)
+   * 3. Firebase elimina el documento de la colección 'pedidos'
+   * 4. El listener subscribeToMyOrders() detecta el evento 'removed'
+   * 5. Firebase envía un snapshot actualizado (sin el pedido eliminado)
+   * 6. updateOrdersDisplay() renderiza la nueva lista
+   * 7. SIMULTÁNEAMENTE: El lavandero también ve el cambio en tiempo real
+   * 
+   * ⚠️ IMPORTANTE - NO ACTUALIZAR UI MANUALMENTE:
+   * - NO modificamos this.myOrders aquí
+   * - NO llamamos a updateActiveOrders() o updateOrderHistory()
+   * - Firebase y el listener se encargan de TODO automáticamente
+   * - Esto garantiza sincronización perfecta cliente-lavandero
+   * 
+   * @param {string} orderId - ID del pedido a eliminar
+   */
   async deleteOrder(orderId) {
+    // Mostrar confirmación al usuario
     if (!confirm("¿Estás seguro de que quieres eliminar este pedido?")) {
       return;
     }
 
     try {
       this.showLoading(true);
+      
+      console.log("🗑️ Eliminando pedido de Firestore:", orderId);
+      
+      // ─────────────────────────────────────────────────────────────────
+      // ELIMINAR DE FIRESTORE
+      // ─────────────────────────────────────────────────────────────────
+      // Esto dispara automáticamente el listener en tiempo real
       await this.firebaseService.deleteOrder(orderId);
+      
       this.showNotification("Pedido eliminado exitosamente", "success");
+      
+      console.log("✅ Pedido eliminado de Firestore. El listener actualizará la UI automáticamente.");
+      
+      // ─────────────────────────────────────────────────────────────────
+      // ⚠️ NO ACTUALIZAR UI MANUALMENTE - Firebase lo hace automáticamente
+      // ─────────────────────────────────────────────────────────────────
+      // El listener en subscribeToMyOrders() detectará el cambio 'removed'
+      // Firebase enviará un snapshot actualizado SIN el pedido eliminado
+      // updateOrdersDisplay() renderizará la nueva lista automáticamente
+      // Esto garantiza que cliente Y lavandero vean el cambio en tiempo real
+      
     } catch (error) {
-      console.error("Error deleting order:", error);
+      console.error("❌ Error al eliminar pedido:", error);
       this.showNotification("Error al eliminar el pedido", "error");
     } finally {
       this.showLoading(false);
@@ -516,15 +681,21 @@ class ClienteDashboard {
 
   showNotification(message, type = "info") {
     const notification = document.createElement("div");
-    notification.className = `notification notification-${type}`;
+    notification.className = `notification ${type}`;
     notification.textContent = message;
 
     document.body.appendChild(notification);
 
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 10);
+
     setTimeout(() => {
-      if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
-      }
+      notification.classList.remove('show');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 400);
     }, 5000);
   }
 

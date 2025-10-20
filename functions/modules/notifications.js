@@ -5,16 +5,18 @@
 
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 
+// NOTA: Nodemailer comentado temporalmente para deployment
+// Descomentar cuando se instalen las dependencias correctamente
 // Configurar nodemailer
-const transporter = nodemailer.createTransporter({
-  service: "gmail",
-  auth: {
-    user: (functions.config().email && functions.config().email.user) || "",
-    pass: (functions.config().email && functions.config().email.pass) || "",
-  },
-});
+// const transporter = nodemailer.createTransporter({
+//   service: "gmail",
+//   auth: {
+//     user: (functions.config().email && functions.config().email.user) || "",
+//     pass: (functions.config().email && functions.config().email.pass) || "",
+//   },
+// });
 
 /**
  * Notificar al cliente cuando cambia el estado de su pedido
@@ -134,8 +136,15 @@ exports.notifyLavanderoAssigned = functions.firestore
 
 /**
  * Enviar email de cambio de estado
+ * NOTA: Funcionalidad de email temporalmente deshabilitada
  */
 async function sendStatusChangeEmail(clienteData, orderData, lavanderoData) {
+  console.log('📧 Notificación de cambio de estado (email deshabilitado temporalmente)');
+  console.log(`  Cliente: ${clienteData.email}`);
+  console.log(`  Estado: ${orderData.estado}`);
+  return; // Email funcionalidad comentada
+  
+  /* DESCOMENTAR CUANDO NODEMAILER ESTÉ CONFIGURADO
   if (!transporter.options.auth.user) {
     console.log('⚠️ Email no configurado, saltando envío');
     return;
@@ -167,12 +176,20 @@ async function sendStatusChangeEmail(clienteData, orderData, lavanderoData) {
   };
   
   await transporter.sendMail(mailOptions);
+  */
 }
 
 /**
  * Enviar email de asignación de lavandero
+ * NOTA: Funcionalidad de email temporalmente deshabilitada
  */
 async function sendLavanderoAssignedEmail(clienteData, orderData, lavanderoData) {
+  console.log('📧 Notificación de lavandero asignado (email deshabilitado temporalmente)');
+  console.log(`  Cliente: ${clienteData.email}`);
+  console.log(`  Lavandero: ${lavanderoData.name}`);
+  return; // Email funcionalidad comentada
+  
+  /* DESCOMENTAR CUANDO NODEMAILER ESTÉ CONFIGURADO
   if (!transporter.options.auth.user) {
     console.log('⚠️ Email no configurado, saltando envío');
     return;
@@ -198,6 +215,7 @@ async function sendLavanderoAssignedEmail(clienteData, orderData, lavanderoData)
   };
   
   await transporter.sendMail(mailOptions);
+  */
 }
 
 /**

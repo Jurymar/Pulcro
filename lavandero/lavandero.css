@@ -1,14 +1,36 @@
-/* Reset and Base Styles */
+/* ═══════════════════════════════════════════════════════════════
+   ESTILOS DASHBOARD LAVANDERO - PULCRO
+   ═══════════════════════════════════════════════════════════════
+   
+   Estilos específicos para el panel de control del lavandero.
+   
+   Funcionalidades incluidas:
+   - Dashboard con pedidos pendientes disponibles
+   - Sistema de aceptación de pedidos
+   - Gestión de pedidos en progreso
+   - Historial de pedidos completados
+   - Información detallada de direcciones y entregas
+   - Sistema de notificaciones
+   
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────────────────────────
+   RESET GLOBAL
+   ────────────────────────────────────────────────────────────── */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   BODY - CONFIGURACIÓN PRINCIPAL
+   ────────────────────────────────────────────────────────────── */
+/* Fondo fijo con gradiente morado */
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
+  background-attachment: fixed; /* El fondo no se mueve al hacer scroll */
   color: #333;
   line-height: 1.6;
   min-height: 100vh;
@@ -453,9 +475,13 @@ body {
   color: #059669;
 }
 
-/* Order Alert */
+/* ══════════════════════════════════════════════════════════════
+   ALERTA DE PEDIDO URGENTE
+   ══════════════════════════════════════════════════════════════ */
+/* Banner llamativo que indica cuando hay pedidos pendientes de aceptar
+   Incluye animación de pulso para llamar la atención */
 .order-alert {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); /* Gradiente amarillo */
   border: 2px solid #f59e0b;
   border-radius: 12px;
   padding: 1rem;
@@ -463,23 +489,27 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  animation: pulse 2s infinite;
+  animation: pulse 2s infinite; /* Pulsa continuamente */
 }
 
 .order-alert i {
-  color: #d97706;
+  color: #d97706; /* Ícono naranja oscuro */
   font-size: 1.2rem;
 }
 
 .order-alert span {
-  color: #92400e;
+  color: #92400e; /* Texto marrón oscuro para contraste */
   font-weight: 600;
   font-size: 1rem;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   ANIMACIÓN DE PULSO
+   ────────────────────────────────────────────────────────────── */
+/* Hace que la alerta pulse sutilmente para atraer atención */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  50% { opacity: 0.8; } /* Se atenúa ligeramente */
 }
 
 .order-details {
@@ -558,8 +588,13 @@ body {
   flex-wrap: wrap;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   BOTÓN ACEPTAR PEDIDO
+   ══════════════════════════════════════════════════════════════ */
+/* Botón principal y llamativo para que el lavandero acepte un pedido.
+   Tiene un diseño especial con múltiples líneas de texto */
 .btn-accept {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Gradiente verde */
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -568,13 +603,14 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Permite texto en varias líneas */
   align-items: center;
   gap: 0.25rem;
   min-width: 200px;
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
 
+/* Efecto hover: elevación y sombra más pronunciada */
 .btn-accept:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);

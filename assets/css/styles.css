@@ -1,47 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════
+   ESTILOS PRINCIPALES - PULCRO
+   ═══════════════════════════════════════════════════════════════
+   
+   Este archivo contiene todos los estilos para la página principal
+   (index.html) de la aplicación de lavandería Pulcro.
+   
+   Secciones incluidas:
+   - Reset y estilos base
+   - Header y navegación
+   - Hero section con animación de burbujas
+   - Sección de servicios
+   - Sección "Cómo funciona"
+   - FAQ (Preguntas frecuentes)
+   - Modales (Login, Registro)
+   - Notificaciones
+   - Estilos responsive
+   
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────────────────────────
+   RESET GLOBAL
+   ────────────────────────────────────────────────────────────── */
+/* Elimina márgenes y padding por defecto de todos los elementos
+   y establece box-sizing para un manejo más intuitivo del tamaño */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   ESTILOS BASE DEL BODY
+   ────────────────────────────────────────────────────────────── */
+/* Configuración principal del documento:
+   - Fuente: Inter (fuente moderna y legible)
+   - Color de texto: gris oscuro (#333)
+   - padding-top: espacio para el header fijo */
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
   color: #333;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Previene scroll horizontal no deseado */
+  padding-top: 80px; /* Espacio para el header fijo */
 }
 
-/* Header */
+/* ══════════════════════════════════════════════════════════════
+   HEADER - ENCABEZADO FIJO
+   ══════════════════════════════════════════════════════════════ */
+/* Header con posición fija que permanece visible al hacer scroll.
+   Usa efecto de vidrio (backdrop-filter) para un look moderno */
 .header {
-  position: fixed;
+  position: fixed; /* Se mantiene en la parte superior al hacer scroll */
   top: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95); /* Fondo semi-transparente */
+  backdrop-filter: blur(20px); /* Efecto de vidrio difuminado */
+  z-index: 1000; /* Aparece por encima de otros elementos */
   padding: 1rem 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  transition: all 0.3s ease; /* Transición suave para cambios */
 }
 
+/* ──────────────────────────────────────────────────────────────
+   BARRA DE NAVEGACIÓN
+   ────────────────────────────────────────────────────────────── */
+/* Contenedor principal de la navegación con diseño flexible */
 .nav {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  max-width: 1200px; /* Ancho máximo para pantallas grandes */
+  margin: 0 auto; /* Centrado horizontal */
+  display: flex; /* Diseño flexible */
+  justify-content: space-between; /* Espacio entre logo y botones */
+  align-items: center; /* Alineación vertical centrada */
   padding: 0 2rem;
-  position: relative;
+  position: relative; /* Para posicionar menú móvil */
 }
 
+/* ──────────────────────────────────────────────────────────────
+   LOGO CON GRADIENTE
+   ────────────────────────────────────────────────────────────── */
+/* Logo de la marca con efecto de texto gradiente morado */
 .logo {
   font-size: 2.2rem;
-  font-weight: 700;
+  font-weight: 700; /* Negrita */
+  /* Gradiente morado aplicado al texto */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  z-index: 1100;
+  -webkit-background-clip: text; /* Recorta el fondo al texto (Safari) */
+  -webkit-text-fill-color: transparent; /* Hace el texto transparente */
+  background-clip: text; /* Recorta el fondo al texto (estándar) */
+  z-index: 1100; /* Por encima del menú móvil */
 }
 
 .nav-menu {
@@ -187,16 +233,23 @@ body {
   top: 8px;
 }
 
-/* Hero Section */
+/* ══════════════════════════════════════════════════════════════
+   HERO SECTION - SECCIÓN PRINCIPAL DE BIENVENIDA
+   ══════════════════════════════════════════════════════════════ */
+/* Sección principal con fondo gradiente que ocupa casi toda la pantalla.
+   Incluye el mensaje de bienvenida y botones para cliente/lavandero.
+   También contiene la animación de burbujas (definida más abajo) */
 .hero {
-  min-height: 100vh;
+  min-height: calc(100vh - 80px - 3rem); /* Altura completa menos header y márgenes */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  align-items: center; /* Centra contenido verticalmente */
+  justify-content: center; /* Centra contenido horizontalmente */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradiente morado */
   color: white;
   text-align: center;
-  padding: 8rem 2rem 4rem 2rem;
+  padding: 4rem 2rem;
+  margin: 1.5rem; /* Márgenes externos */
+  border-radius: 24px; /* Bordes redondeados suaves */
 }
 
 .hero-content {
@@ -265,39 +318,52 @@ body {
   color: #333;
 }
 
-/* Services Section */
+/* ══════════════════════════════════════════════════════════════
+   SECCIÓN DE SERVICIOS
+   ══════════════════════════════════════════════════════════════ */
+/* Muestra las diferentes categorías de servicio (Lavado, Planchado, etc.)
+   en tarjetas organizadas en una cuadrícula responsive */
 .services {
-  padding: 6rem 0;
-  background: #f8f9fa;
+  padding: 6rem 0; /* Espaciado vertical generoso */
+  background: #f8f9fa; /* Fondo gris claro para contraste */
 }
 
+/* ──────────────────────────────────────────────────────────────
+   GRID DE SERVICIOS
+   ────────────────────────────────────────────────────────────── */
+/* Cuadrícula que se adapta al tamaño de pantalla */
 .services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive automático */
+  gap: 2rem; /* Espacio entre tarjetas */
   margin-top: 3rem;
 }
 
-/* Desktop: force two cards per row */
+/* En escritorio: forzar dos tarjetas por fila para mejor diseño */
 @media (min-width: 901px) {
   .services-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr); /* Exactamente 2 columnas */
   }
 }
 
+/* ──────────────────────────────────────────────────────────────
+   TARJETA DE SERVICIO
+   ────────────────────────────────────────────────────────────── */
+/* Cada tarjeta de servicio individual con efectos hover */
 .service-card {
   background: white;
   padding: 2.5rem 2rem;
-  border-radius: 16px;
+  border-radius: 16px; /* Bordes redondeados */
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Sombra sutil */
+  transition: all 0.3s ease; /* Transiciones suaves */
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+/* Efecto al pasar el mouse: elevación de la tarjeta */
 .service-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px); /* Se eleva 8px */
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
 }
 
 .service-image {
@@ -340,11 +406,249 @@ body {
   background: white;
 }
 
+/* FAQ Section */
+.faq {
+  padding: 6rem 0;
+  background: #f8f9fa;
+}
+
+.faq-subtitle {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #667eea;
+  margin-bottom: 0.5rem;
+}
+
+.faq-accordion {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.faq-item {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.faq-question {
+  width: 100%;
+  padding: 1.5rem 2rem;
+  background: white;
+  border: none;
+  border-left: 4px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.faq-question:hover {
+  background: #f8f9fa;
+}
+
+.faq-question.active {
+  border-left-color: #667eea;
+  background: #f8f9fa;
+}
+
+.faq-icon {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: #667eea;
+  min-width: 30px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  padding: 0 2rem;
+}
+
+.faq-answer.active {
+  max-height: 5000px;
+  padding: 0 2rem 2rem 2rem;
+}
+
+.faq-subsection {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.faq-subsection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.faq-subquestion {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border: none;
+  border-left: 3px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.faq-subquestion:hover {
+  background: #eef0f3;
+}
+
+.faq-subquestion.active {
+  border-left-color: #667eea;
+  background: #e8ebf7;
+}
+
+.faq-subicon {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: #667eea;
+  min-width: 25px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.faq-subcontent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  padding: 0 1.5rem;
+}
+
+.faq-subcontent.active {
+  max-height: 3000px;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+.faq-subcontent p {
+  color: #666;
+  line-height: 1.8;
+  margin-bottom: 0.75rem;
+}
+
+.faq-subcontent ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.faq-subcontent li {
+  padding-left: 1.5rem;
+  position: relative;
+  color: #666;
+  line-height: 1.8;
+  margin-bottom: 0.5rem;
+}
+
+.faq-subcontent li::before {
+  content: "•";
+  color: #667eea;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.faq-subcontent strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Responsive FAQ */
+@media (max-width: 768px) {
+  .faq {
+    padding: 4rem 0;
+  }
+
+  .faq-question {
+    padding: 1.2rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .faq-icon {
+    font-size: 1.5rem;
+  }
+
+  .faq-answer {
+    padding: 0 1.5rem;
+  }
+
+  .faq-answer.active {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+  }
+
+  .faq-subsection {
+    margin-bottom: 0.75rem;
+  }
+
+  .faq-subquestion {
+    padding: 0.9rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .faq-subicon {
+    font-size: 1.2rem;
+  }
+
+  .faq-subcontent {
+    padding: 0 1.2rem;
+  }
+
+  .faq-subcontent.active {
+    padding: 0.8rem 1.2rem 1.2rem 1.2rem;
+  }
+
+  .faq-subcontent p,
+  .faq-subcontent li {
+    font-size: 0.95rem;
+  }
+}
+
 .steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 3rem;
   margin-top: 3rem;
+}
+
+/* Tablet: 2 columnas (2x2) */
+@media (max-width: 900px) {
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+/* Móvil: 1 columna */
+@media (max-width: 600px) {
+  .steps {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
 }
 
 .step {
@@ -431,18 +735,22 @@ body {
   opacity: 0.8;
 }
 
-/* Modal Styles */
+/* ══════════════════════════════════════════════════════════════
+   MODALES - VENTANAS EMERGENTES
+   ══════════════════════════════════════════════════════════════ */
+/* Modales para login, registro de cliente y registro de lavandero.
+   Aparecen como ventanas emergentes centradas con fondo oscurecido */
 .modal {
-  display: none;
-  position: fixed;
-  z-index: 2000;
+  display: none; /* Oculto por defecto */
+  position: fixed; /* Fijo en pantalla */
+  z-index: 2000; /* Por encima de todo el contenido */
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente oscuro */
+  backdrop-filter: blur(5px); /* Difumina el contenido detrás */
+  overflow-y: auto; /* Permite scroll si es necesario */
   padding: 1rem 0;
 }
 
@@ -686,7 +994,11 @@ body.modal-open {
   display: block;
 }
 
-/* Notification Styles */
+/* ══════════════════════════════════════════════════════════════
+   NOTIFICACIONES - MENSAJES DE FEEDBACK
+   ══════════════════════════════════════════════════════════════ */
+/* Sistema de notificaciones toast que aparece en la esquina superior
+   derecha para mostrar mensajes de éxito, error, info o advertencia */
 .notification {
   position: fixed;
   top: 2rem;
@@ -695,31 +1007,33 @@ body.modal-open {
   border-radius: 8px;
   color: white;
   font-weight: 600;
-  z-index: 3000;
-  transform: translateX(400px);
-  transition: transform 0.3s ease;
+  z-index: 3000; /* Por encima de todo, incluso modales */
+  transform: translateX(400px); /* Inicialmente fuera de pantalla */
+  transition: transform 0.3s ease; /* Animación de entrada/salida */
   max-width: 400px;
 }
 
+/* Estado visible: desliza hacia dentro */
 .notification.show {
   transform: translateX(0);
 }
 
+/* Variantes de color según el tipo de mensaje */
 .notification.success {
-  background: #28a745;
+  background: #28a745; /* Verde para éxito */
 }
 
 .notification.error {
-  background: #dc3545;
+  background: #dc3545; /* Rojo para errores */
 }
 
 .notification.info {
-  background: #17a2b8;
+  background: #17a2b8; /* Azul para información */
 }
 
 .notification.warning {
-  background: #ffc107;
-  color: #333;
+  background: #ffc107; /* Amarillo para advertencias */
+  color: #333; /* Texto oscuro para mejor contraste */
 }
 
 /* Scroll Effects */
@@ -740,6 +1054,12 @@ body.modal-open {
 }
 
 @media (max-width: 900px) {
+  .hero {
+    margin: 1rem;
+    border-radius: 20px;
+    min-height: calc(100vh - 80px - 2rem);
+  }
+
   .nav-menu {
     position: fixed;
     top: 100px;
@@ -809,11 +1129,6 @@ body.modal-open {
     gap: 1.5rem;
   }
 
-  .steps {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
   .modal-content {
     padding: 1.5rem;
     margin: 1rem auto;
@@ -847,7 +1162,10 @@ body.modal-open {
   }
 
   .hero {
-    padding: 7rem 1rem 3rem 1rem;
+    padding: 3rem 1rem;
+    margin: 0.75rem;
+    border-radius: 16px;
+    min-height: calc(100vh - 80px - 1.5rem);
   }
 
   .hero-text h1 {
@@ -933,6 +1251,13 @@ body.modal-open {
 }
 
 @media (max-width: 400px) {
+  .hero {
+    margin: 0.5rem;
+    border-radius: 12px;
+    padding: 2.5rem 1rem;
+    min-height: calc(100vh - 80px - 1rem);
+  }
+
   .hero-text h1 {
     font-size: 1.8rem;
   }
@@ -1033,30 +1358,41 @@ body.modal-open {
   }
 }
 
-/* Burbujas animadas en el hero */
+/* ══════════════════════════════════════════════════════════════
+   ANIMACIÓN DE BURBUJAS EN HERO
+   ══════════════════════════════════════════════════════════════ */
+/* Efecto visual decorativo de burbujas flotantes en el hero section.
+   Las burbujas suben desde abajo con diferentes velocidades y tamaños */
+
+/* Hero como contenedor de las burbujas */
 .hero {
-  position: relative;
-  overflow: hidden;
+  position: relative; /* Para posicionar burbujas absolutamente dentro */
+  overflow: hidden; /* Oculta burbujas que salen del contenedor */
 }
 
+/* Contenedor de todas las burbujas */
 .hero-bubbles {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
+  inset: 0; /* Ocupa todo el espacio del hero */
+  pointer-events: none; /* No interfiere con clics */
+  z-index: 1; /* Detrás del contenido del hero */
 }
 
+/* ──────────────────────────────────────────────────────────────
+   ESTILO DE BURBUJA INDIVIDUAL
+   ────────────────────────────────────────────────────────────── */
+/* Cada burbuja es un círculo semi-transparente que flota hacia arriba */
 .bubble {
   position: absolute;
-  bottom: -120px;
+  bottom: -120px; /* Inicia fuera de vista, abajo */
   width: 16px;
   height: 16px;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.25); /* Blanco semi-transparente */
   border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 50%;
-  filter: blur(0.2px);
-  animation: rise var(--dur, 12s) linear infinite;
-  transform: translateZ(0);
+  border-radius: 50%; /* Forma circular */
+  filter: blur(0.2px); /* Difuminado sutil */
+  animation: rise var(--dur, 12s) linear infinite; /* Animación de subida */
+  transform: translateZ(0); /* Optimización de rendimiento GPU */
 }
 
 /* Posiciones y tamaños variados */
@@ -1145,20 +1481,25 @@ body.modal-open {
   animation-delay: 6s;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   KEYFRAMES - ANIMACIÓN DE SUBIDA DE BURBUJAS
+   ────────────────────────────────────────────────────────────── */
+/* Las burbujas suben gradualmente, cambian de tamaño y se mueven
+   ligeramente en horizontal para un efecto más natural */
 @keyframes rise {
   0% {
     transform: translateY(0) translateX(0) scale(1);
-    opacity: 0;
+    opacity: 0; /* Comienza invisible */
   }
   10% {
-    opacity: 1;
+    opacity: 1; /* Se hace visible rápidamente */
   }
   50% {
-    transform: translateY(-50vh) translateX(10px) scale(1.05);
+    transform: translateY(-50vh) translateX(10px) scale(1.05); /* Mitad del camino */
   }
   100% {
-    transform: translateY(-105vh) translateX(-10px) scale(1.1);
-    opacity: 0;
+    transform: translateY(-105vh) translateX(-10px) scale(1.1); /* Sale por arriba */
+    opacity: 0; /* Se desvanece al final */
   }
 }
 
