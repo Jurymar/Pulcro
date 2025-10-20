@@ -1,10 +1,37 @@
-// Dashboard Lavandero - Pulcro
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * DASHBOARD DEL LAVANDERO - Gestión de Pedidos de Lavandería
+ * ═══════════════════════════════════════════════════════════════════
+ * 
+ * Este archivo maneja toda la lógica del panel de control del lavandero:
+ * 
+ * FUNCIONALIDADES PRINCIPALES:
+ * ✅ Verificación de autenticación (solo lavanderos autenticados)
+ * ✅ Ver pedidos disponibles (pendientes) en tiempo real
+ * ✅ Tomar pedidos usando transacciones (evita conflictos)
+ * ✅ Ver pedidos en progreso del lavandero
+ * ✅ Ver historial de pedidos completados
+ * ✅ Completar pedidos
+ * ✅ Estadísticas (total ganado, pedidos completados)
+ * 
+ * ACTUALIZACIONES EN TIEMPO REAL:
+ * - subscribeToPendingOrders(): Escucha pedidos disponibles (status: pending)
+ * - subscribeToLavanderoOrders(): Escucha pedidos del lavandero (en progreso/completados)
+ * - Detecta automáticamente: pedidos nuevos, actualizados o eliminados por clientes
+ * - Actualiza la UI instantáneamente sin recargar la página
+ * 
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
 class LavanderoDashboard {
+  // ──────────────────────────────────────────────────────────────────
+  // CONSTRUCTOR - Inicializa propiedades del dashboard
+  // ──────────────────────────────────────────────────────────────────
   constructor() {
-    this.firebaseService = window.firebaseService;
-    this.currentUser = null;
-    this.currentOrderId = null;
-    this.init();
+    this.firebaseService = window.firebaseService;  // Servicio Firebase global
+    this.currentUser = null;                        // Usuario autenticado (Firebase Auth)
+    this.currentOrderId = null;                     // ID del pedido actualmente seleccionado
+    this.init();                                    // Inicializar dashboard
   }
 
   async init() {
@@ -97,10 +124,40 @@ class LavanderoDashboard {
     }
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // ⚡ LISTENERS EN TIEMPO REAL - Pedidos Disponibles y del Lavandero
+  // ══════════════════════════════════════════════════════════════════
+  /**
+   * 🔥 FUNCIÓN CRÍTICA - Crea listeners en tiempo real para pedidos
+   * 
+   * CREA 2 LISTENERS SIMULTÁNEOS:
+   * 1. subscribeToPendingOrders: Pedidos disponibles (status: pending)
+   * 2. subscribeToLavanderoOrders: Pedidos del lavandero (en progreso/completados)
+   * 
+   * ¿POR QUÉ ES IMPORTANTE PARA ELIMINACIÓN EN TIEMPO REAL?
+   * 
+   * ESCENARIO 1: Cliente elimina un pedido pendiente (aún no tomado)
+   * → subscribeToPendingOrders detecta 'removed'
+   * → Firebase envía snapshot sin el pedido eliminado
+   * → displayOrdersInTab("pending", ...) actualiza la lista de disponibles
+   * → El pedido desaparece automáticamente de la UI del lavandero
+   * 
+   * ESCENARIO 2: Cliente elimina un pedido que el lavandero ya tomó
+   * → subscribeToLavanderoOrders detecta 'removed'
+   * → Firebase envía snapshot sin el pedido eliminado
+   * → displayOrdersInTab("in-progress", ...) actualiza la lista del lavandero
+   * → El pedido desaparece de la UI del lavandero (en progreso)
+   * 
+   * ⚠️ SINCRONIZACIÓN PERFECTA:
+   * Cliente elimina → Firestore elimina → Ambos listeners detectan 'removed'
+   * → Cliente ve actualización → Lavandero ve actualización → TODO EN TIEMPO REAL
+   */
   subscribeToOrders() {
     console.log("🔄 Suscribiéndose a pedidos para lavandero:", this.currentUser.uid);
     
-    // Limpiar suscripciones anteriores si existen
+    // ─────────────────────────────────────────────────────────────────
+    // LIMPIAR SUSCRIPCIONES ANTERIORES (previene memory leaks)
+    // ─────────────────────────────────────────────────────────────────
     if (this.unsubscribeAvailable) {
       console.log("🧹 Limpiando suscripción anterior de pedidos disponibles");
       this.unsubscribeAvailable();
@@ -110,27 +167,38 @@ class LavanderoDashboard {
       this.unsubscribeMine();
     }
     
-    // Suscripción a pedidos pendientes disponibles usando Firebase Service
+    // ═════════════════════════════════════════════════════════════════
+    // LISTENER 1: PEDIDOS DISPONIBLES (Pendientes)
+    // ═════════════════════════════════════════════════════════════════
     console.log("📡 Iniciando suscripción a pedidos pendientes...");
     this.unsubscribeAvailable = window.firebaseService.subscribeToPendingOrders((snapshot) => {
       console.log("📊 Cambios en pedidos pendientes detectados, tamaño:", snapshot.size);
       const pendingOrders = [];
       
-      // Procesar cambios en el snapshot
+      // ──────────────────────────────────────────────────────────────
+      // PROCESAR CAMBIOS INDIVIDUALES (para logging)
+      // ──────────────────────────────────────────────────────────────
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'removed') {
-          console.log("🗑️ Pedido eliminado:", change.doc.id);
+          // ⚠️ CLAVE: Pedido eliminado por cliente o tomado por lavandero
+          console.log("🗑️ Pedido eliminado/tomado:", change.doc.id);
         } else if (change.type === 'added') {
-          console.log("➕ Pedido agregado:", change.doc.id);
+          // Nuevo pedido creado por cliente
+          console.log("➕ Nuevo pedido disponible:", change.doc.id);
         } else if (change.type === 'modified') {
-          console.log("✏️ Pedido modificado:", change.doc.id);
+          // Pedido actualizado (poco común en pendientes)
+          console.log("✏️ Pedido pendiente modificado:", change.doc.id);
         }
       });
       
+      // ──────────────────────────────────────────────────────────────
+      // CONSTRUIR LISTA DE PEDIDOS DISPONIBLES
+      // ──────────────────────────────────────────────────────────────
       snapshot.forEach((doc) => {
         const orderData = doc.data();
         console.log("🔍 Revisando pedido:", doc.id, "lavanderoId:", orderData.lavanderoId);
-        // Verificar que no tenga lavandero asignado
+        
+        // Solo mostrar pedidos sin lavandero asignado (disponibles)
         if (!orderData.lavanderoId || orderData.lavanderoId === null) {
           pendingOrders.push({ id: doc.id, ...orderData });
           console.log("✅ Pedido disponible agregado:", doc.id);
@@ -138,15 +206,40 @@ class LavanderoDashboard {
           console.log("❌ Pedido ya asignado:", doc.id, "a lavandero:", orderData.lavanderoId);
         }
       });
+      
       console.log("📋 Total pedidos pendientes disponibles:", pendingOrders.length);
+      
+      // Actualizar UI con pedidos disponibles
       this.displayOrdersInTab("pending", pendingOrders);
     });
 
-    // Suscripción a pedidos del lavandero usando Firebase Service
+    // ═════════════════════════════════════════════════════════════════
+    // LISTENER 2: PEDIDOS DEL LAVANDERO (En progreso y completados)
+    // ═════════════════════════════════════════════════════════════════
     console.log("📡 Iniciando suscripción a pedidos del lavandero...");
     this.unsubscribeMine = window.firebaseService.subscribeToLavanderoOrders(this.currentUser.uid, (snapshot) => {
       console.log("📊 Cambios en pedidos del lavandero detectados, tamaño:", snapshot.size);
       const orders = [];
+      
+      // ──────────────────────────────────────────────────────────────
+      // PROCESAR CAMBIOS (INCLUYE ELIMINACIÓN POR CLIENTE)
+      // ──────────────────────────────────────────────────────────────
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'removed') {
+          // ⚠️ CRÍTICO: Cliente eliminó un pedido que este lavandero había tomado
+          console.log("🗑️ Cliente eliminó pedido:", change.doc.id);
+        } else if (change.type === 'added') {
+          // Lavandero acaba de tomar este pedido
+          console.log("➕ Pedido tomado por lavandero:", change.doc.id);
+        } else if (change.type === 'modified') {
+          // Pedido actualizado (cambio de status: in-progress → completed)
+          console.log("✏️ Pedido del lavandero modificado:", change.doc.id);
+        }
+      });
+      
+      // ──────────────────────────────────────────────────────────────
+      // CONSTRUIR LISTA DE PEDIDOS DEL LAVANDERO
+      // ──────────────────────────────────────────────────────────────
       snapshot.forEach((doc) => {
         orders.push({ id: doc.id, ...doc.data() });
       });

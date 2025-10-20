@@ -1,102 +1,218 @@
 /**
- * Cloud Functions para Sistema de Lavandería Pulcro
- * Funciones implementadas:
- * 1. Notificaciones automáticas de cambios de estado
- * 2. Actualización de estadísticas en tiempo real
- * 3. Validación de pedidos
- * 4. Cálculo automático de precios
- * 5. Limpieza automática de datos antiguos
- * 6. Generación de reportes
- * 7. Sistema de calificaciones automático
+ * ═══════════════════════════════════════════════════════════════════
+ * CLOUD FUNCTIONS - Backend Serverless de Pulcro
+ * ═══════════════════════════════════════════════════════════════════
+ * 
+ * Las Cloud Functions son código backend que se ejecuta automáticamente
+ * en respuesta a eventos de Firebase (triggers) o llamadas HTTP.
+ * 
+ * VENTAJAS:
+ * ✅ Serverless: No necesitas administrar servidores
+ * ✅ Escalable: Firebase escala automáticamente según la demanda
+ * ✅ Seguro: Se ejecuta en un entorno controlado
+ * ✅ Automático: Responde a eventos en tiempo real
+ * 
+ * FUNCIONES IMPLEMENTADAS:
+ * 
+ * 1️⃣ NOTIFICACIONES AUTOMÁTICAS
+ *    - notifyOrderStatusChange: Notifica cuando cambia el estado de un pedido
+ *    - notifyLavanderoAssigned: Notifica cuando se asigna un lavandero
+ * 
+ * 2️⃣ VALIDACIONES
+ *    - validateOrder: Valida datos de pedidos antes de crear
+ *    - validateUserData: Valida datos de usuarios (cliente/lavandero)
+ *    - validateOrderAssignment: Valida asignación de pedidos
+ *    - validateLavanderoProfile: Valida perfiles de lavanderos
+ * 
+ * 3️⃣ ESTADÍSTICAS
+ *    - updateStatsOnOrderCreate: Actualiza stats al crear pedido
+ *    - updateStatsOnOrderComplete: Actualiza stats al completar pedido
+ *    - getGeneralStats: Obtiene estadísticas generales del sistema
+ *    - getLavanderoStats: Obtiene estadísticas de un lavandero específico
+ *    - calculateRealTimeStats: Calcula estadísticas en tiempo real
+ * 
+ * 4️⃣ UTILIDADES
+ *    - calculateOrderPrice: Calcula el precio de un pedido
+ *    - cleanupOldData: Limpia datos antiguos (se ejecuta diariamente)
+ *    - generateReport: Genera reportes personalizados
+ * 
+ * DESPLIEGUE:
+ * Para desplegar estas funciones: firebase deploy --only functions
+ * 
+ * ═══════════════════════════════════════════════════════════════════
  **/
 
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+// ──────────────────────────────────────────────────────────────────
+// IMPORTAR DEPENDENCIAS
+// ──────────────────────────────────────────────────────────────────
+const functions = require('firebase-functions');  // SDK de Cloud Functions
+const admin = require('firebase-admin');          // SDK Admin de Firebase
 
-// Inicializar Firebase Admin
+// ──────────────────────────────────────────────────────────────────
+// INICIALIZAR FIREBASE ADMIN
+// ──────────────────────────────────────────────────────────────────
+// Firebase Admin tiene permisos completos sobre Firestore, Auth, etc.
+// Se usa en el backend para operaciones privilegiadas
 admin.initializeApp();
 
-// Importar módulos
-const notifications = require('./modules/notifications');
-const validation = require('./modules/validation');
-const stats = require('./modules/stats');
+// ──────────────────────────────────────────────────────────────────
+// IMPORTAR MÓDULOS PERSONALIZADOS
+// ──────────────────────────────────────────────────────────────────
+// Las funciones están organizadas en módulos para mejor mantenimiento
+const notifications = require('./modules/notifications');  // Sistema de notificaciones
+const validation = require('./modules/validation');        // Validaciones de datos
+const stats = require('./modules/stats');                  // Estadísticas y métricas
 
-// ============================================================================
+// ══════════════════════════════════════════════════════════════════
 // EXPORTAR FUNCIONES DE MÓDULOS
-// ============================================================================
+// ══════════════════════════════════════════════════════════════════
+// Cada función exportada estará disponible como endpoint de Cloud Functions
+// Ejemplo: https://us-central1-pulcro-xxx.cloudfunctions.net/validateOrder
 
-// Notificaciones
+// ──────────────────────────────────────────────────────────────────
+// MÓDULO: NOTIFICACIONES
+// ──────────────────────────────────────────────────────────────────
+// Envía notificaciones automáticas cuando ocurren eventos importantes
 exports.notifyOrderStatusChange = notifications.notifyOrderStatusChange;
 exports.notifyLavanderoAssigned = notifications.notifyLavanderoAssigned;
 
-// Validaciones
+// ──────────────────────────────────────────────────────────────────
+// MÓDULO: VALIDACIONES
+// ──────────────────────────────────────────────────────────────────
+// Valida datos antes de crear/actualizar documentos en Firestore
 exports.validateOrder = validation.validateOrder;
 exports.validateUserData = validation.validateUserData;
 exports.validateOrderAssignment = validation.validateOrderAssignment;
 exports.validateLavanderoProfile = validation.validateLavanderoProfile;
 
-// Estadísticas
+// ──────────────────────────────────────────────────────────────────
+// MÓDULO: ESTADÍSTICAS
+// ──────────────────────────────────────────────────────────────────
+// Actualiza y calcula estadísticas del sistema en tiempo real
 exports.updateStatsOnOrderCreate = stats.updateStatsOnOrderCreate;
 exports.updateStatsOnOrderComplete = stats.updateStatsOnOrderComplete;
 exports.getGeneralStats = stats.getGeneralStats;
 exports.getLavanderoStats = stats.getLavanderoStats;
 exports.calculateRealTimeStats = stats.calculateRealTimeStats;
 
-// ============================================================================
-// FUNCIONES ADICIONALES (MANTENIDAS DEL ARCHIVO ORIGINAL)
-// ============================================================================
+// ══════════════════════════════════════════════════════════════════
+// FUNCIONES ADICIONALES
+// ══════════════════════════════════════════════════════════════════
 
 /**
- * Calcular precio de pedido
+ * ─────────────────────────────────────────────────────────────────
+ * CALCULAR PRECIO DE PEDIDO
+ * ─────────────────────────────────────────────────────────────────
+ * 
+ * Función callable (se puede llamar desde el cliente usando Firebase SDK)
+ * Calcula el precio total de un pedido según el tipo de servicio y peso
+ * 
+ * PARÁMETROS:
+ * @param {string} serviceType - Tipo de servicio (lavado, seco, zapatos, hogar, express)
+ * @param {number} weight - Peso de la ropa en kg
+ * 
+ * RETORNA:
+ * @returns {Object} { basePrice, totalPrice, weight, serviceType }
+ * 
+ * SEGURIDAD:
+ * - Requiere autenticación (context.auth)
+ * - Valida que existan todos los parámetros
+ * 
+ * USO DESDE CLIENTE:
+ * const calculatePrice = firebase.functions().httpsCallable('calculateOrderPrice');
+ * const result = await calculatePrice({ serviceType: 'lavado', weight: 5 });
  */
 exports.calculateOrderPrice = functions.https.onCall(async (data, context) => {
+  // ═══════════════════════════════════════════════════════════════
+  // VALIDAR AUTENTICACIÓN
+  // ═══════════════════════════════════════════════════════════════
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Usuario no autenticado');
   }
   
+  // ═══════════════════════════════════════════════════════════════
+  // VALIDAR PARÁMETROS
+  // ═══════════════════════════════════════════════════════════════
   const { serviceType, weight } = data;
   
   if (!serviceType || !weight) {
     throw new functions.https.HttpsError('invalid-argument', 'Faltan parámetros requeridos');
   }
   
-  // Precios base por tipo de servicio
+  // ═══════════════════════════════════════════════════════════════
+  // TABLA DE PRECIOS BASE POR SERVICIO
+  // ═══════════════════════════════════════════════════════════════
   const basePrices = {
-    'lavado': 5000,
-    'seco': 8000,
-    'zapatos': 3000,
-    'hogar': 4000,
-    'express': 10000
+    'lavado': 5000,         // Lavado estándar: $5,000/kg
+    'seco': 8000,           // Lavado en seco: $8,000/kg
+    'zapatos': 3000,        // Limpieza de zapatos: $3,000/kg
+    'hogar': 4000,          // Ropa de hogar: $4,000/kg
+    'express': 10000        // Servicio express: $10,000/kg
   };
   
-  const basePrice = basePrices[serviceType] || 5000;
+  // ═══════════════════════════════════════════════════════════════
+  // CALCULAR PRECIO TOTAL
+  // ═══════════════════════════════════════════════════════════════
+  const basePrice = basePrices[serviceType] || 5000;  // Default: $5,000/kg
   const totalPrice = basePrice * weight;
   
   return {
-    basePrice,
-    totalPrice,
-    weight,
-    serviceType
+    basePrice,    // Precio por kg
+    totalPrice,   // Precio total (basePrice * weight)
+    weight,       // Peso en kg
+    serviceType   // Tipo de servicio
   };
 });
 
 /**
- * Limpiar datos antiguos
+ * ─────────────────────────────────────────────────────────────────
+ * LIMPIAR DATOS ANTIGUOS (TAREA PROGRAMADA)
+ * ─────────────────────────────────────────────────────────────────
+ * 
+ * Función scheduled (se ejecuta automáticamente en un horario definido)
+ * Se ejecuta diariamente a las 2:00 AM (horario del servidor)
+ * 
+ * PROPÓSITO:
+ * - Elimina notificaciones leídas mayores a 30 días
+ * - Archiva pedidos completados antiguos
+ * - Limpia logs y datos temporales
+ * - Mantiene la base de datos optimizada
+ * 
+ * PROGRAMACIÓN:
+ * '0 2 * * *' → Cron expression (minuto hora día mes díasemana)
+ * - 0: Minuto 0
+ * - 2: Hora 2 AM
+ * - *: Todos los días del mes
+ * - *: Todos los meses
+ * - *: Todos los días de la semana
+ * 
+ * DESPLIEGUE:
+ * Esta función se ejecuta automáticamente después de ser desplegada.
+ * No requiere llamadas manuales desde el cliente.
  */
 exports.cleanupOldData = functions.pubsub.schedule('0 2 * * *').onRun(async (context) => {
   console.log('🧹 Iniciando limpieza de datos antiguos');
   
   try {
+    // ═══════════════════════════════════════════════════════════════
+    // DEFINIR FECHA LÍMITE (30 días atrás)
+    // ═══════════════════════════════════════════════════════════════
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    // Limpiar notificaciones antiguas
+    // ═══════════════════════════════════════════════════════════════
+    // LIMPIAR NOTIFICACIONES ANTIGUAS Y LEÍDAS
+    // ═══════════════════════════════════════════════════════════════
+    // Solo elimina notificaciones que:
+    // 1. Tienen más de 30 días
+    // 2. Ya fueron leídas por el usuario
     const oldNotifications = await admin.firestore()
       .collection('notifications')
       .where('createdAt', '<', thirtyDaysAgo)
       .where('read', '==', true)
       .get();
     
+    // Usar batch para eliminar múltiples documentos de forma eficiente
     const batch = admin.firestore().batch();
     oldNotifications.docs.forEach(doc => {
       batch.delete(doc.ref);

@@ -1,25 +1,59 @@
 <!DOCTYPE html>
 <html lang="es">
+  <!--
+    ═══════════════════════════════════════════════════════════════
+    PULCRO - PÁGINA PRINCIPAL (Landing Page)
+    ═══════════════════════════════════════════════════════════════
+    
+    Esta es la página de inicio/bienvenida de la aplicación.
+    
+    ESTRUCTURA:
+    1. Header: Navegación y botón de login
+    2. Hero: Sección principal con llamado a la acción
+    3. Servicios: Muestra los diferentes tipos de servicio
+    4. Cómo Funciona: Explica el proceso en 4 pasos
+    5. FAQ: Preguntas frecuentes con acordeón
+    6. Contacto: Información de contacto
+    7. Footer: Pie de página
+    8. Modales: Login, registro cliente y registro lavandero
+    
+    SCRIPTS:
+    - Firebase SDK (auth y firestore)
+    - Servicios propios (auth, notificaciones, validaciones, etc.)
+    - app.js: Maneja interactividad de la página
+    
+    ═══════════════════════════════════════════════════════════════
+  -->
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pulcro - Tu Lavandería Digital</title>
+    <title>Te lavo - Tu lavandería digital</title>
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body>
-    <!-- Header -->
+    <!-- ══════════════════════════════════════════════════════════
+         HEADER - Barra de navegación fija en la parte superior
+         ═════════════════════════════════════════════════════════ -->
     <header class="header">
       <nav class="nav">
-        <div class="logo">Pulcro</div>
+        <!-- Logo de la marca -->
+        <div class="logo">Te lavo</div>
+        
+        <!-- Botón hamburguesa para móviles (solo visible en responsive) -->
         <button class="nav-toggle" aria-label="Abrir menú">
           <span class="hamburger"></span>
         </button>
+        
+        <!-- Menú de navegación (enlaces internos con scroll suave) -->
         <ul class="nav-menu">
           <li><a href="#inicio">Inicio</a></li>
           <li><a href="#servicios">Servicios</a></li>
           <li><a href="#como-funciona">Cómo Funciona</a></li>
+          <li><a href="#faq">Preguntas Frecuentes</a></li>
           <li><a href="#contacto">Contacto</a></li>
         </ul>
+        
+        <!-- Botones de acción (login o perfil si está autenticado) -->
         <div class="nav-buttons">
           <a href="#" class="btn-outline" onclick="openModal('login')"
             >Iniciar Sesión</a
@@ -28,8 +62,18 @@
       </nav>
     </header>
 
-    <!-- Hero Section -->
+    <!-- ══════════════════════════════════════════════════════════
+         HERO SECTION - Sección principal de bienvenida
+         ═════════════════════════════════════════════════════════ 
+         
+         Presenta el servicio y los dos tipos de usuario:
+         - Clientes: Pueden solicitar servicios de lavandería
+         - Lavanderos: Proveedores de servicios
+         
+         Incluye animación de burbujas flotantes para efecto visual
+         ══════════════════════════════════════════════════════════ -->
     <section class="hero" id="inicio">
+      <!-- Burbujas animadas de fondo (CSS animation) -->
       <div class="hero-bubbles">
         <span class="bubble"></span>
         <span class="bubble"></span>
@@ -44,14 +88,18 @@
         <span class="bubble"></span>
         <span class="bubble"></span>
       </div>
+      
+      <!-- Contenido principal del hero -->
       <div class="hero-content">
         <div class="hero-text">
-          <h1>Tu Lavandería Digital</h1>
+          <h1>Tu lavandería digital</h1>
           <p>
             Conectamos clientes con lavanderos profesionales.
             <br />
             Servicio rápido, confiable y a tu puerta.
           </p>
+          
+          <!-- Botones para registrarse según tipo de usuario -->
           <div class="hero-buttons">
             <button class="user-type-btn" onclick="openModal('cliente')">
               Soy Cliente
@@ -143,6 +191,376 @@
       </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <p class="faq-subtitle">Preguntas frecuentes</p>
+        <h2 class="section-title">¿Quieres saber más?</h2>
+        <div class="faq-accordion">
+          <!-- Cuidado de la ropa -->
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Cuidado de la ropa</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Detergente</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Al realizar un pedido, Te lavo le ofrece 3 opciones de detergente:</p>
+                  <ul>
+                    <li>Con aroma premium</li>
+                    <li>Hipoalergénico (sin perfume/piel sensible)</li>
+                    <li>Proporciona tu propio</li>
+                  </ul>
+                  <p>Si elige un detergente con aroma premium o hipoalergénico, su profesional de lavandería usará un detergente de marca premium de primera calidad. Si elige "traer el suyo", incluya su detergente al recogerlo. Su profesional de lavandería usará su detergente y le devolverá el no utilizado.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Temperatura seca</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Las prendas Te lavo se secan a fuego medio-bajo, nunca a fuego alto.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Suavizante de telas</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>No se recomienda el suavizante, ya que daña las telas y acorta la vida útil de la ropa; por lo tanto, Te lavo no suele tener ni usar suavizante. Sin embargo, si desea suavizante, simplemente solicítelo en "Instrucciones especiales" e indique el que desea y se lo prepararemos. No hay ningún cargo adicional por esto.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Colgar para secar</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Para el servicio de lavandería Estándar (al día siguiente), su profesional de lavandería estará encantado de atender sus solicitudes de secado al aire libre. El secado al aire libre no está disponible para el servicio Express (el mismo día o al día siguiente).</p>
+                  <p>Para el servicio estándar (al día siguiente), si desea secar al aire libre sus prendas:</p>
+                  <ul>
+                    <li>Seleccione "secar colgado" y "perchas".</li>
+                    <li>Coloque las prendas que se van a secar al aire en una bolsa aparte y etiquétela como "secar al aire".</li>
+                    <li>Coloque la cantidad correcta de perchas en su bolsa para secar la ropa. (Te lavo no vende perchas).</li>
+                  </ul>
+                  <p>Listo. Su lavandero profesional secará esas prendas colgadas y se las devolverá colgadas y secas. Este servicio es gratuito, pero tenga en cuenta que las prendas colgadas se pesan después de lavarlas, secarlas, colgarlas y empacarlas, es decir, se pesan junto con las perchas.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>¿Lavado con agua caliente o con agua fría?</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Te lavo lava la ropa en agua fría, según lo recomendado por expertos en lavandería. Sin embargo, si prefiere lavarla en agua caliente, solicítelo en "Instrucciones adicionales" y se adaptarán a sus necesidades.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Otros productos de lavandería</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Los profesionales de lavandería de Te lavo solo tienen en inventario detergente, incluido en el servicio de lavado, secado y doblado. Sin embargo, puede incluir cualquier producto de lavandería que desee usar con el servicio (por ejemplo, suavizante, toallitas para secadora, lejía, etc.). El profesional de lavandería usará lo que usted proporcione, según sus instrucciones, y le devolverá lo que no utilice. No hay ningún cargo adicional por esto.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Otros servicios</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Te lavo es una plataforma de servicio de lavandería personal de lavado, secado y doblado.</p>
+                  <p>Los profesionales de lavandería de Te lavo no buscan manchas, no tratan manchas ni utilizan ningún producto quitamanchas.</p>
+                  <p>Te lavo no ofrece servicios adicionales como planchado, eliminación de pelusa, limpieza de zapatos, lavado a mano o limpieza en seco.</p>
+                  <p>Te lavo ofrece una opción de "secado colgado".</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Paquete por miembro de la familia</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Los profesionales de lavandería de Te lavo se esfuerzan por empacar la ropa por miembro de la familia y tipo de prenda, para que te sea fácil guardarla. No dudes en incluir cualquier solicitud especial en "Instrucciones adicionales" o enviar un mensaje a tu profesional de lavandería.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Precios y pagos -->
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Precios y pagos</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Precio</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>El servicio de lavandería estándar (al día siguiente) cuesta $1 por libra en la mayoría de los códigos postales, y en algunos es más caro. El servicio de lavandería exprés (el mismo día o al día siguiente) cuesta $2 por libra en la mayoría de los códigos postales, y en algunos es más caro. La recogida y la entrega son gratuitas.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>¿Costo por bolsa?</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>No se cobra por bolsa; se cobra por libra de ropa. La cantidad de bolsas que proporcione no altera el precio por libra. De hecho, ¡las bolsas más pequeñas son mejores para los profesionales de la lavandería!</p>
+                  <p>El servicio de lavandería estándar de Te lavo (al día siguiente) cuesta $1 por libra en la mayoría de los códigos postales, y más en algunos. El servicio de lavandería exprés de Te lavo (el mismo día o al día siguiente) cuesta $2 por libra en la mayoría de los códigos postales, y más en algunos. La recogida y la entrega son gratuitas.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Costo estimado</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Un cesto de ropa promedio pesa alrededor de 4.5 kg. Esto podría ayudarte a calcular el costo del servicio. O simplemente pesa tu ropa con una báscula. Primero, pésate. Luego, sosteniendo cada bolsa de ropa. Resta una de la otra y obtendrás el peso de tu ropa. La mayoría de los hogares envían entre 9 y 27 kg de ropa a la semana.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Formas de pago</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Las tarjetas de crédito y débito son las únicas formas de pago aceptables.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Cómo verificar el peso</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Para verificar el peso de su ropa, simplemente pese las bolsas después de recibirlas. Puede pesarlas fácilmente en casa con una báscula de baño estándar. Primero, pésese solo y luego vuelva a pesar cada bolsa. Reste una de la otra y obtendrá el peso de cada bolsa de ropa.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Artículos de gran tamaño ($8 adicionales)</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Las prendas de gran tamaño, como los edredones, tienen un costo adicional de $8 por prenda (además del costo por libra). Una prenda de gran tamaño requiere su propio ciclo de lavado y secado en una lavadora/secadora residencial estándar.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Tarifa mínima</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>El cargo mínimo por pedido es de $30. Puedes lavar la cantidad que desees, pero si el peso multiplicado por el costo por libra es menor a $30, se te cobrará $30.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Recibo</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Después de lavar, secar, doblar, empacar y pesar su ropa, se cargará el servicio a su tarjeta de crédito/débito y le enviaremos un recibo por correo electrónico.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>¿Pesado húmedo o seco?</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Su ropa se pesa después de secarse. No se pesa cuando está mojada. Su profesional de lavandería recogerá con gusto la ropa mojada, pero le rogamos que la coloque en bolsas pequeñas para que no pese demasiado. Después de lavar, secar, doblar, empacar y pesar su ropa, se cargará el costo del servicio a su tarjeta de crédito/débito.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Tarifas potenciales</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p><strong>Tarifa de confianza y seguridad:</strong> Para que Te lavo pueda operar una plataforma segura, cobramos una pequeña tarifa de servicio de $3 por cada pedido.</p>
+                  <p><strong>Precios dinámicos:</strong> El precio dinámico solo aplica si un profesional de lavandería tuvo que ser incentivado para aceptar sus pedidos anteriores varias veces.</p>
+                  <p><strong>Tarifa por recogida perdida:</strong> Se aplica una tarifa de $10 si su profesional de lavandería llega para recoger su ropa pero no está en el lugar de recogida designado.</p>
+                  <p><strong>Tarifa por insalubridad:</strong> Se puede cobrar una tarifa de $20 si se considera que su ropa no es segura para que los profesionales la reparen.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recogida/entrega -->
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Recogida/entrega</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Hora de recogida/entrega</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>El horario de recogidas y entregas depende de la velocidad del servicio que usted seleccione.</p>
+                  <p><strong>SERVICIO ESTÁNDAR:</strong></p>
+                  <ul>
+                    <li>Los pedidos realizados antes de las 3 p. m. se recogen antes de las 8 p. m. de ese día y se entregan a las 8 p. m. del día siguiente.</li>
+                    <li>Los pedidos realizados después de las 3:00 p. m. se recogen antes de las 8:00 p. m. del día siguiente y se entregan completos a las 8:00 p. m. del día siguiente.</li>
+                  </ul>
+                  <p><strong>SERVICIO EXPRÉS:</strong></p>
+                  <ul>
+                    <li>Los pedidos realizados antes de las 10 a. m. se recogen a las 2 p. m. y se entregan a las 8 p. m. de esa misma tarde.</li>
+                    <li>Los pedidos realizados entre las 10:00 y las 15:00 se recogen a las 20:00 y se entregan a las 10:00 de la mañana siguiente.</li>
+                    <li>Los pedidos realizados después de las 15:00 se recogen a las 14:00 del día siguiente y se entregan a las 20:00 de esa misma tarde.</li>
+                  </ul>
+                  <p>El servicio exprés tiene un límite de peso de 60 libras y no permite secar artículos colgados.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>¿Necesito bolsas de lavandería?</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Puedes dejar tu ropa para que la recojan en la bolsa que prefieras, en bolsas desechables o en tu cesto. La mayoría de la gente usa bolsas desechables. Si usas tu cesto, tu lavandero transferirá tu ropa a una bolsa desechable y dejará tu cesto. También puedes usar bolsas de lavandería, que te devolverán lavadas.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Recogida y entrega gratuitas</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>El servicio de lavandería que ofrece Te lavo incluye recogida y entrega gratuitas (7 días a la semana).</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Huéspedes del hotel</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Te lavo atiende a huéspedes de hoteles en todo el país. El servicio y el proceso de pedido son iguales que si lo hiciera desde su casa.</p>
+                  <p>Puntos importantes a tener en cuenta:</p>
+                  <ul>
+                    <li>Designe la recepción de su hotel como punto de recogida/entrega. Los profesionales de lavandería no pueden recoger ni dejar a sus huéspedes en las habitaciones.</li>
+                    <li>Asegúrese de etiquetar cada maleta con su nombre, "Recogida de Te lavo" y el número de maleta (por ejemplo, 1 de 3, 2 de 3, etc.).</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>No puedo dejar la ropa afuera</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Al hacer su pedido, la mayoría de los clientes dejan su ropa en el punto de recogida designado y dejan que los profesionales se encarguen del resto. Sin embargo, si no puede dejar su ropa fuera después de hacer su pedido, no se preocupe.</p>
+                  <p>Cuando se acepte el pedido, recibirás un mensaje de tu profesional de lavandería indicando la hora de recogida. Contesta a tu profesional de lavandería indicándole que tu ropa no estará disponible y que debe llamar a la puerta o enviar un mensaje cuando llegue.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cuentas comerciales -->
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Cuentas comerciales</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Cuentas comerciales</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Te lavo atiende a diversos tipos de cuentas comerciales. Toda la información del Centro de Ayuda, nuestro sitio web y la app aplica tanto para cuentas comerciales como residenciales.</p>
+                  <p>Si tiene más de 1000 libras de ropa para lavar por semana, comuníquese con nosotros para que podamos analizar cómo podemos brindarle el mejor servicio y ofrecerle un administrador de cuenta dedicado.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Limitaciones -->
+          <div class="faq-item">
+            <button class="faq-question">
+              <span>Limitaciones</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Limitaciones de tamaño</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Te lavo lavará cualquier cosa que quepa en una lavadora y secadora residencial de tamaño estándar.</p>
+                  <p>Te lavo no acepta artículos extra grandes, como edredones tamaño king. Cualquier artículo que no se pueda lavar se devolverá en una bolsa aparte, sin lavar, sin pesar y sin cargo.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Lavandería insegura o insalubre</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Te lavo no atiende ropa insegura o insalubre. Tampoco atiende ropa con exceso de pelo de mascotas. Antes de realizar un pedido, se le solicitará que certifique que su lavandería:</p>
+                  <ul>
+                    <li>Es seguro y no incluye chinches, pulgas, cucarachas ni materiales biológicos peligrosos.</li>
+                    <li>Es sanitario y no incluye heces, orina, sangre o vómito, más allá de los rastros que normalmente se encuentran en la ropa del hogar.</li>
+                    <li>No incluye el exceso de pelo de mascotas.</li>
+                  </ul>
+                  <p>Los infractores deberán pagar una tarifa de $20, devolver la ropa lavada "tal como está" y la cuenta puede ser cerrada.</p>
+                </div>
+              </div>
+              
+              <div class="faq-subsection">
+                <button class="faq-subquestion">
+                  <span>Limitaciones de peso</span>
+                  <span class="faq-subicon">+</span>
+                </button>
+                <div class="faq-subcontent">
+                  <p>Para el servicio de lavandería Estándar (al día siguiente), no hay límite de peso; sin embargo, si supera los 45 kg, su lavandero podría necesitar días adicionales para completar el trabajo. Para el servicio Express (el mismo día o al día siguiente), el límite de peso es de 27 kg.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer" id="contacto">
       <div class="container">
@@ -217,7 +635,23 @@
       </div>
     </div>
 
-    <!-- Lavandero Modal -->
+    <!-- ══════════════════════════════════════════════════════════
+         MODAL DE REGISTRO LAVANDERO
+         ═════════════════════════════════════════════════════════
+         
+         Formulario para que los lavanderos se registren en el sistema.
+         
+         CAMPOS REQUERIDOS:
+         - Nombre completo del dueño/responsable
+         - Email (usado para login)
+         - Teléfono de contacto
+         - Dirección del establecimiento
+         - Servicios que ofrece (checkboxes múltiples)
+         - Contraseña (mínimo 6 caracteres)
+         
+         Al enviar: Se crea cuenta en Firebase Auth + documento en
+         colección "lavanderos" de Firestore
+         ══════════════════════════════════════════════════════════ -->
     <div id="lavanderoModal" class="modal">
       <div class="modal-content">
         <span class="close" onclick="closeModal('lavanderoModal')"
@@ -329,10 +763,5 @@
     <!-- Main App -->
     <script src="assets/js/app.js"></script>
 
-    <!-- Debug Script (remover en producción) -->
-    <script src="debug-registration.js"></script>
-
-    <!-- Test Script (remover en producción) -->
-    <script src="test-firebase.js"></script>
   </body>
 </html>
